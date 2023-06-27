@@ -17,12 +17,6 @@ jobs:
           name: Run the code
           command: |
             python app.py
-
-workflows:
-  version: 2.1
-  your_workflow_name:
-    jobs:
-      - build:
-          triggers:
-            - schedule:
-                cron: "*/2 * * * *"
+    triggers:
+      - schedule:
+          cron: "*/2 * * * *"
