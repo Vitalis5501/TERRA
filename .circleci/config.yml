@@ -19,23 +19,10 @@ jobs:
             python app.py
 
 workflows:
-  version: 2
+  version: 2.1
   your_workflow_name:
     jobs:
       - build:
-          filters:
-            branches:
-              only:
-                - main
-workflows:
-  version: 2
-  your_workflow_name:
-    triggers:
-      - schedule:
-          cron: "*/2 * * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - build
+          triggers:
+            - schedule:
+                cron: "*/2 * * * *"
