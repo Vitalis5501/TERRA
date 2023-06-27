@@ -1,36 +1,41 @@
 version: 2.1
- # Schedule the pipeline to run every 2 minutes
-workflows:
-  version: 2
-  build-and-deploy:
-    jobs:
-      - build
-      - deploy:
-          requires:
-            - build
- jobs:
+
+jobs:
   build:
     docker:
       - image: circleci/python:3.9
+
     steps:
       - checkout
+
       - run:
           name: Install dependencies
           command: |
             pip install requests pyral
+
       - run:
           name: Run the code
           command: |
-            python your_script_name.py
-   deploy:
-    docker:
-      - image: circleci/python:3.9
-    steps:
-      - run:
-          name: Deploy the code
-          command: |
-            # Add your deployment commands here
             python app.py
- # Schedule the job to run every 2 minutes
-schedule:
-  cron: "*/2 * * * *"
+
+workflows:
+  version: 2
+  your_workflow_name:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - main
+workflows:
+  version: 2
+  your_workflow_name:
+    triggers:
+      - schedule:
+          cron: "*/2 * * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build
