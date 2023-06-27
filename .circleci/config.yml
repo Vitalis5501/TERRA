@@ -1,32 +1,18 @@
 version: 2.1
-
 jobs:
   build:
     docker:
       - image: circleci/python:3.9
-
     steps:
       - checkout
-
       - run:
           name: Install dependencies
           command: |
             pip install requests pyral
-
       - run:
           name: Run the code
           command: |
             python app.py
-
-workflows:
-  version: 2
-  schedule:
-    triggers:
-      - schedule:
-          cron: "*/2 * * * *"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - build
+    # Schedule the job to run every 2 minutes
+    schedule:
+      cron: "*/2 * * * *"
