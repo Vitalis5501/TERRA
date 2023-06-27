@@ -7,7 +7,7 @@ workflows:
       - your_job_name:
           filters:
             branches:
-              only: master
+              only: main
 
 jobs:
   your_job_name:
