@@ -21,12 +21,12 @@ jobs:
 workflows:
   version: 2
   your_workflow_name:
-    jobs:
-      - build:
+    triggers:
+      - schedule:
+          cron: "*/5 * * * *"
           filters:
             branches:
               only:
                 - main
-    triggers:
-      - schedule:
-          cron: "*/5 * * * *"
+    jobs:
+      - build
