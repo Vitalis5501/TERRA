@@ -16,17 +16,17 @@ jobs:
       - run:
           name: Run the code
           command: |
-            python your_script_name.py
+            python app.py
 
 workflows:
   version: 2
-  schedule:
-    triggers:
-      - schedule:
-          cron: "*/5 * * * *"
+  your_workflow_name:
+    jobs:
+      - build:
           filters:
             branches:
               only:
-                - master
-    jobs:
-      - build
+                - main
+    triggers:
+      - schedule:
+          cron: "*/5 * * * *"
