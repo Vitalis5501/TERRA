@@ -1,16 +1,7 @@
 version: 2.1
 
-workflows:
-  version: 2
-  your_workflow_name:
-    jobs:
-      - your_job_name:
-          filters:
-            branches:
-              only: main
-
 jobs:
-  your_job_name:
+  build:
     docker:
       - image: circleci/python:3.9
 
@@ -25,9 +16,17 @@ jobs:
       - run:
           name: Run the code
           command: |
-            python app.py
+            python your_script_name.py
 
-      - persist_to_workspace:
-          root: .
-          paths:
-            - app.py
+workflows:
+  version: 2
+  schedule:
+    triggers:
+      - schedule:
+          cron: "*/5 * * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build
