@@ -12,7 +12,7 @@ parameters:
   - name: KEY_VAULT_REGION
     displayName: 'Key Vault Region'
     type: string
-    default: 'UKSO'
+    default: ''
     values:
       - UKSO
       - USE
