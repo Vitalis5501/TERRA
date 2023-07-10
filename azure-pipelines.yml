@@ -17,6 +17,14 @@ parameters:
       - UKSO
       - USE
       - US-east-2
+  - name: KEY_VAULT_NAME
+    displayName: 'Key Vault Name'
+    type: string
+    default: ''
+    values:
+      - SI-KV-AVI
+      - AVI_KV-prd
+      - AVI-KV-nonprd
 
 jobs:
 - job: CreateKeyVaultSecret
@@ -35,18 +43,19 @@ jobs:
       from azure.keyvault.secrets import SecretClient
       from azure.core.pipeline.transport import AioHttpTransport
 
-      def get_key_vault_url(region):
+      def get_key_vault_url(region, vault_name):
           if region == 'USE':
-              return 'https://key-vault-region1.vault.azure.net'
+              return f'https://{vault_name}.vault.azure.net'
           elif region == 'UKSO':
-              return 'https://key-vault-region2.vault.azure.net'
+              return f'https://{vault_name}.vault.azure.net'
           elif region == 'US-east-2':
-              return 'https://key-vault-region3.vault.azure.net'
+              return f'https://{vault_name}.vault.azure.net'
           else:
               raise Exception(f'Invalid region selected: {region}')
 
       key_vault_region = '$(KEY_VAULT_REGION)'
-      key_vault_url = get_key_vault_url(key_vault_region)
+      key_vault_name = '$(KEY_VAULT_NAME)'
+      key_vault_url = get_key_vault_url(key_vault_region, key_vault_name)
       credential = DefaultAzureCredential()
 
       def create_secret(secret_name, secret_value):
