@@ -1,19 +1,62 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+trigger: none
 
-trigger:
-- circleci-project-setup
+parameters:
+  - name: SECRET_NAME
+    displayName: 'Secret Name'
+    type: string
+    default: ''
+    description: 'Enter the secret name'
+  - name: SECRET_VALUE
+    displayName: 'Secret Value'
+    type: string
+    default: ''
+    description: 'Enter the secret value'
+  - name: KEY_VAULT_REGION
+    displayName: 'Key Vault Region'
+    type: string
+    default: 'UKSO'
+    values:
+      - UKSO
+      - USE
+      - US-east-2
+    description: 'Select the region where the Key Vault is located'
 
-pool:
-  vmImage: ubuntu-latest
+jobs:
+- job: CreateKeyVaultSecret
+  displayName: 'Create Key Vault Secret'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      addToPath: true
+  - script: |
+      python -m pip install azure-identity azure-keyvault-secrets azure-core
+      python - <<EOF
+      from azure.identity import DefaultAzureCredential
+      from azure.keyvault.secrets import SecretClient
+      from azure.core.pipeline.transport import AioHttpTransport
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+      def get_key_vault_url(region):
+          if region == 'USE':
+              return 'https://key-vault-region1.vault.azure.net'
+          elif region == 'UKSO':
+              return 'https://key-vault-region2.vault.azure.net'
+          elif region == 'US-east-2':
+              return 'https://key-vault-region3.vault.azure.net'
+          else:
+              raise Exception(f'Invalid region selected: {region}')
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+      key_vault_region = '$(KEY_VAULT_REGION)'
+      key_vault_url = get_key_vault_url(key_vault_region)
+      credential = DefaultAzureCredential()
+
+      def create_secret(secret_name, secret_value):
+          transport = AioHttpTransport(max_connections=5)
+          secret_client = SecretClient(vault_url=key_vault_url, credential=credential, transport=transport)
+          secret_client.set_secret(secret_name, secret_value)
+          print(f'Secret "{secret_name}" created successfully.')
+
+      create_secret("$(SECRET_NAME)", "$(SECRET_VALUE)")
+      EOF
