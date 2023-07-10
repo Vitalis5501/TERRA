@@ -5,12 +5,10 @@ parameters:
     displayName: 'Secret Name'
     type: string
     default: ''
-    description: 'Enter the secret name'
   - name: SECRET_VALUE
     displayName: 'Secret Value'
     type: string
     default: ''
-    description: 'Enter the secret value'
   - name: KEY_VAULT_REGION
     displayName: 'Key Vault Region'
     type: string
@@ -19,7 +17,6 @@ parameters:
       - UKSO
       - USE
       - US-east-2
-    description: 'Select the region where the Key Vault is located'
 
 jobs:
 - job: CreateKeyVaultSecret
