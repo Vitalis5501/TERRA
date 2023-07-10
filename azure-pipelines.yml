@@ -22,9 +22,9 @@ parameters:
     type: string
     default: ''
     values:
-      - SI-KV-AVI
-      - AVI_KV-prd
-      - AVI-KV-nonprd
+      - key-vault1
+      - key-vault2
+      - key-vault3
 
 jobs:
 - job: CreateKeyVaultSecret
