@@ -4,7 +4,8 @@ titan@frun10834:/tmp/test_setup$ docker save quay.io/ibmcsiblock/ibm-block-csi-o
 docker save quay.io/ibmcsiblock/ibm-block-csi-operator:1.11.0 > quay.io_ibmcsiblock_ibm-block-csi-operator.tar
 microk8s.ctr image import quay.io/ibmcsiblock/ibm-block-csi-operator.tar
 microk8s.ctr image list 
-
+ image: quay.io/ibmcsiblock/ibm-block-csi-operator:1.11.0
+    imagePullPolicy: IfNotPresent
 
 Enable Admin User for ACR:
 '''
