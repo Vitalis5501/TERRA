@@ -1,4 +1,5 @@
 # Consumption_budget
+microk8s kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-iscsi/master/deploy/kubernetes/iscsi-csi.yaml
 
 
 ## Overview
