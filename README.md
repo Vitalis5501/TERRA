@@ -8,6 +8,9 @@ serviceaccount/ibm-block-csi-operator created
 error: resource mapping not found for name: "ibmblockcsis.csi.ibm.com" namespace: "" from "ibm-block-csi-operator.yaml": no matches for kind "CustomResourceDefinition" in version "apiextensions.k8s.io/v1beta1"
 ensure CRDs are installed first 
 
+error: resource mapping not found for name: "ibm-block-csi" namespace: "ibm-block-csi" from "csi.ibm.com_v1_ibmblockcsi_cr.yaml": no matches for kind "IBMBlockCSI" in version "csi.ibm.com/v1"
+ensure CRDs are installed first
+
 ## Overview
 
 This Terraform module creates Azure consumption budgets at the subscription levels.
