@@ -30,3 +30,9 @@ workflows:
                 - main
     jobs:
       - build
+Normal   Scheduled  3m50s                  default-scheduler  Successfully assigned default/ibm-block-csi-operator-7b474bf7f6-zzdpt to frun10836.geico.net
+Warning  Failed     2m33s (x6 over 3m50s)  kubelet            Error: ImagePullBackOff
+Normal   Pulling    2m18s (x4 over 3m51s)  kubelet            Pulling image "geiconp.azurecr.io/uniobs/obsibm/ibmcsiblock/ibm-block-csi-operator:1.11.0"
+Warning  Failed     2m18s (x4 over 3m51s)  kubelet            Failed to pull image "geiconp.azurecr.io/uniobs/obsibm/ibmcsiblock/ibm-block-csi-operator:1.11.0": rpc error: code = Unknown desc = failed to pull and unpack image "geiconp.azurecr.io/uniobs/obsibm/ibmcsiblock/ibm-block-csi-operator:1.11.0": failed to resolve reference "geiconp.azurecr.io/uniobs/obsibm/ibmcsiblock/ibm-block-csi-operator:1.11.0": failed to authorize: failed to fetch anonymous token: unexpected status: 401 Unauthorized
+Warning  Failed     2m18s (x4 over 3m51s)  kubelet            Error: ErrImagePull
+Normal   BackOff    2m5s (x7 over 3m50s)   kubelet            Back-off pulling image "geiconp.azurecr.io/uniobs/obsibm/ibmcsiblock/ibm-block-csi-operator:1.11.0"
