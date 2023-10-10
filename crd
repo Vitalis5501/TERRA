@@ -6,6 +6,13 @@ microk8s.ctr image import quay.io/ibmcsiblock/ibm-block-csi-operator.tar
 microk8s.ctr image list 
  image: quay.io/ibmcsiblock/ibm-block-csi-operator:1.11.0
     imagePullPolicy: IfNotPresent
+Host *
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host *
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
 
 Enable Admin User for ACR:
 '''
