@@ -1,1 +1,33 @@
 
+volumeMounts:
+- name: service-discovery-east-a
+  mountPath: /etc/blackbox_exporter/service_discovery
+  subPath: prom_file_sd_east-a.json
+- name: service-discovery-east-b
+  mountPath: /etc/blackbox_exporter/service_discovery
+  subPath: prom_file_sd_east-b.json
+  
+volumes:
+  -name: service-discovery-east-a
+    configMap:
+      name: prom-file-sd-east-config-a
+  -name: service-discovery-east-b
+    configMap:
+      name: prom-file-sd-east-config-b 
+
+
+      apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prom-file-sd-east-config-b
+  namespace: demo
+data:
+  prom_file_sd_east-b.json: | 
+  
+  apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prom-file-sd-east-config-a
+  namespace: demo
+data:
+  prom_file_sd_east-a.json: | 
