@@ -1,1 +1,3 @@
-
+kubectl apply -f .\prom-file-sd-east-configmap.yaml
+Error from server (RequestEntityTooLarge): error when creating ".\prom-file-sd-east-configmap.yaml": Request entity too large: limit is 3145728
+solution 
