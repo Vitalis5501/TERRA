@@ -1,15 +1,5 @@
 # Consumption_budget
-microk8s kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-iscsi/master/deploy/kubernetes/iscsi-csi.yaml
 
-deployment.apps/ibm-block-csi-operator created
-clusterrole.rbac.authorization.k8s.io/ibm-block-csi-operator configured
-clusterrolebinding.rbac.authorization.k8s.io/ibm-block-csi-operator unchanged
-serviceaccount/ibm-block-csi-operator created
-error: resource mapping not found for name: "ibmblockcsis.csi.ibm.com" namespace: "" from "ibm-block-csi-operator.yaml": no matches for kind "CustomResourceDefinition" in version "apiextensions.k8s.io/v1beta1"
-ensure CRDs are installed first 
-
-error: resource mapping not found for name: "ibm-block-csi" namespace: "ibm-block-csi" from "csi.ibm.com_v1_ibmblockcsi_cr.yaml": no matches for kind "IBMBlockCSI" in version "csi.ibm.com/v1"
-ensure CRDs are installed first
 
 ## Overview
 
