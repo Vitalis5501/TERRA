@@ -1,3 +1,11 @@
-kubectl apply -f .\prom-file-sd-east-configmap.yaml
-Error from server (RequestEntityTooLarge): error when creating ".\prom-file-sd-east-configmap.yaml": Request entity too large: limit is 3145728
-solution 
+Compress the configuration file and store the compressed version in the ConfigMap.
+When you mount the ConfigMap in your Blackbox Exporter Pod, run an init container to decompress the configuration file before the main container starts.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-configmap
+data:
+  my-config.conf: ${MY_CONFIG_CONTENT}
+export MY_CONFIG_CONTENT="$(< my-config.conf)"
+envsubst < configmap-template.yaml > configmap.yaml
