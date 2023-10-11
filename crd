@@ -1,11 +1,33 @@
-Compress the configuration file and store the compressed version in the ConfigMap.
-When you mount the ConfigMap in your Blackbox Exporter Pod, run an init container to decompress the configuration file before the main container starts.
-https://www.ibm.com/docs/en/STXKQY_CSI_SHR/com.ibm.spectrum.scale.csi.v1r00.doc/pdf/scale_csi.pdf
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: my-configmap
+  name: prom-file-sd-east-config-b
+  namespace: demo
 data:
-  my-config.conf: ${MY_CONFIG_CONTENT}
-export MY_CONFIG_CONTENT="$(< my-config.conf)"
-envsubst < configmap-template.yaml > configmap.yaml
+  prom_file_sd_east-b.json: | 
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prom-file-sd-east-config-a
+  namespace: demo
+data:
+  prom_file_sd_east-a.json: | 
+
+
+
+volumeMounts:
+- name: service-discovery-east-a
+  mountPath: /etc/blackbox_exporter/service_discovery
+  subPath: prom_file_sd_east-a.json
+- name: service-discovery-east-b
+  mountPath: /etc/blackbox_exporter/service_discovery
+  subPath: prom_file_sd_east-b.json
+  
+volumes:
+  -name: service-discovery-east-a
+    configMap:
+      name: prom-file-sd-east-config-a
+  -name: service-discovery-east-b
+    configMap:
+      name: prom-file-sd-east-config-b 
