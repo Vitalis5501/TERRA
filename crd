@@ -1,2 +1,11 @@
-Hi John, Good afternoon.
- I really appreciate your effort to attend to my ticked but one more request, could you please append the environment to each nameservers(e.g prod &non prod)? this is to ensure we clear have a map of each nameservers per environment. Thanks 
+Subject: Clarification Request: Nameserver Environment Tagging
+
+Hi John,
+
+I hope this message finds you well this afternoon. First and foremost, I want to express my sincere appreciation for promptly addressing my previous ticket.
+
+I have one more small request to ensure we maintain clear documentation for our infrastructure. Could you kindly append an environment tag to each of the nameservers, distinguishing between "prod" and "non-prod"? This would greatly assist in mapping nameservers to their respective environments.
+
+Thank you so much for your continued support and attention to detail.
+
+Best regards,
