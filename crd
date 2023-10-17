@@ -1,4 +1,5 @@
 description: Configure SSH host key settings for telemetry collection
+
 parameters:
   targets:
     type: TargetSpec
@@ -12,16 +13,15 @@ parameters:
           UserKnownHostsFile /dev/null
 
 steps:
-  - name: all_targets
-    eval: get_targets($targets)
+  # Removed the step that calls get_targets()
 
   - name: apply_prep_step
     command: apply_prep
-    targets: $all_targets
+    targets: $targets
 
   - name: apply_resources
     eval: |
-      apply($all_targets) {
+      apply($targets) {
         # Ensure .ssh directory exists
         file { "${::home}/.ssh":
           ensure  => directory,
@@ -43,6 +43,6 @@ steps:
   - name: notify_ssh_config
     message: "SSH Configuration Applied Successfully!"
     #level: notice
-    targets: $all_targets
+    targets: $targets
 
 return: $notify_ssh_config
