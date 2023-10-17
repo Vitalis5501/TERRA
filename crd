@@ -1,1 +1,41 @@
-I have successfully completed the manual process of disabling the SSH host key verification challenge for all Titan Ubuntu servers. Currently, my focus is on implementing this solution into Puppet Bolt. I have already crafted the Puppet configuration plan, which I will soon be testing in our non-production environment
+description: Configure SSH host key settings for telemetry collection
+parameters:
+  targets:
+    type: TargetSpec
+    description: A list of targets to apply this plan on
+
+steps:
+  - name: all_targets
+    eval: get_targets($targets)
+
+  - name: ssh_config_content
+    eval: |
+      Host *
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+
+  - block:
+      - apply_prep: $all_targets
+
+      - resources:
+          - type: file
+            title: "${::home}/.ssh"
+            parameters:
+              ensure: directory
+              owner: $::user
+              group: $::group
+              mode: '0700'
+          - type: file
+            title: "${::home}/.ssh/config"
+            parameters:
+              ensure: file
+              owner: $::user
+              group: $::group
+              mode: '0600'
+              content: $ssh_config_content
+
+      - name: notify_ssh_config
+        eval: "Notify { 'SSH Configuration - ${var_node} Applied Successfully!': withpath => false }"
+    target: $all_targets
+
+return: $notify_ssh_config
