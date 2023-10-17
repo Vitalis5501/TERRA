@@ -1,42 +1,48 @@
-description: Configure SSH host key settings for telemetry collection
-parameters:
-  targets:
-    type: TargetSpec
-    description: A list of targets to apply this plan on
-  ssh_config_content:
-    type: String
-    default: |
-      Host *
-          StrictHostKeyChecking no
-          UserKnownHostsFile /dev/null
+plan telemetry_collection::ssh_hostkey_config (
+  TargetSpec $targets
+) {
 
-steps:
-  - name: all_targets
-    eval: get_targets($targets)
+  $all_targets = get_targets($targets)
 
-  - name: apply_prep_step
-    apply_prep: $all_targets
+  # Determine the current SSH configuration for each target (if any)
+  $current_ssh_config_result = run_command('cat ${::home}/.ssh/config || echo "NOT_FOUND"', $all_targets)
 
-  - resources:
-      - type: file
-        title: "${::home}/.ssh"
-        parameters:
-          ensure: directory
-          owner: $::user
-          group: $::group
-          mode: '0700'
-      - type: file
-        title: "${::home}/.ssh/config"
-        parameters:
-          ensure: file
-          owner: $::user
-          group: $::group
-          mode: '0600'
-          content: $ssh_config_content
-    target: $all_targets
+  $ssh_config_content = @("SSHCONFIG"/L)
+Host *
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+| SSHCONFIG |
 
-  - name: notify_ssh_config
-    eval: "Notify { 'SSH Configuration - ${var_node} Applied Successfully!': withpath => false }"
-    target: $all_targets
+  $all_targets.each |$var_node| {
+    $current_ssh_config = $current_ssh_config_result.find($var_node.name).value['stdout'].strip
 
-return: $notify_ssh_config
+    # Only apply the new configuration if it doesn't match the current configuration
+    if $current_ssh_config != $ssh_config_content {
+      apply($var_node) {
+        # Ensure .ssh directory exists
+        file { "${::home}/.ssh":
+          ensure  => directory,
+          owner   => $::user,
+          group   => $::group,
+          mode    => '0700',
+        }
+
+        # SSH config file
+        file { "${::home}/.ssh/config":
+          ensure  => file,
+          owner   => $::user,
+          group   => $::group,
+          mode    => '0600',
+          content => $ssh_config_content,
+        }
+      }
+    }
+
+    # Notify user of the changes (or lack thereof)
+    if $current_ssh_config == $ssh_config_content {
+      out::message("SSH Configuration for ${var_node.name} already matches desired state.")
+    } else {
+      out::message("SSH Configuration for ${var_node.name} has been updated.")
+    }
+  }
+}
