@@ -1,27 +1,22 @@
 # site-modules/profile/plans/ssh_config.yaml
 
 description: "Configure SSH to disable StrictHostKeyChecking"
+
 parameters:
   targets:
     type: TargetSpec
-    default: all
     description: "The targets to run the plan on"
+    default: all
 
 steps:
-  - name: set_ssh_config_content
-    eval: |
-      $config_content = @("CONFIG")
-      Host *
-          StrictHostKeyChecking no
-          UserKnownHostsFile /dev/null
-      | CONFIG
-
   - name: upload_config
-    command: "echo '${$config_content}' > ~/.ssh/config"
+    description: "Set SSH Config Content"
     targets: $targets
+    command: "echo 'Host *\n    StrictHostKeyChecking no\n    UserKnownHostsFile /dev/null' > ~/.ssh/config"
 
   - name: set_permissions
-    command: "chmod 600 ~/.ssh/config"
+    description: "Set correct permissions on SSH config"
     targets: $targets
+    command: "chmod 600 ~/.ssh/config"
 
-return: "SSH Config set successfully on ${$targets}"
+return: ${results}
