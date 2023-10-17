@@ -1,24 +1,27 @@
-plan telemetry_collection::ssh_hostkey_config (
-  TargetSpec $targets
-) {
+description: Configure SSH host key settings for telemetry collection
+parameters:
+  targets:
+    type: TargetSpec
+    description: A list of targets to apply this plan on
 
-  $all_targets = get_targets($targets)
+  ssh_config_content:
+    type: String
+    default: |
+      Host *
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
 
-  # Determine the current SSH configuration for each target (if any)
-  $current_ssh_config_result = run_command('cat ${::home}/.ssh/config || echo "NOT_FOUND"', $all_targets)
+steps:
+  - name: all_targets
+    eval: get_targets($targets)
 
-  $ssh_config_content = @("SSHCONFIG"/L)
-Host *
-    StrictHostKeyChecking no
-    UserKnownHostsFile /dev/null
-| SSHCONFIG |
+  - name: apply_prep_step
+    command: apply_prep
+    targets: $all_targets
 
-  $all_targets.each |$var_node| {
-    $current_ssh_config = $current_ssh_config_result.find($var_node.name).value['stdout'].strip
-
-    # Only apply the new configuration if it doesn't match the current configuration
-    if $current_ssh_config != $ssh_config_content {
-      apply($var_node) {
+  - name: apply_resources
+    eval: |
+      apply($all_targets) {
         # Ensure .ssh directory exists
         file { "${::home}/.ssh":
           ensure  => directory,
@@ -36,13 +39,10 @@ Host *
           content => $ssh_config_content,
         }
       }
-    }
 
-    # Notify user of the changes (or lack thereof)
-    if $current_ssh_config == $ssh_config_content {
-      out::message("SSH Configuration for ${var_node.name} already matches desired state.")
-    } else {
-      out::message("SSH Configuration for ${var_node.name} has been updated.")
-    }
-  }
-}
+  - name: notify_ssh_config
+    message: "SSH Configuration Applied Successfully!"
+    level: notice
+    targets: $all_targets
+
+return: $notify_ssh_config
