@@ -1,11 +1,1 @@
-Subject: Clarification Request: Nameserver Environment Tagging
-
-Hi John,
-
-I hope this message finds you well this afternoon. First and foremost, I want to express my sincere appreciation for promptly addressing my previous ticket.
-
-I have one more small request to ensure we maintain clear documentation for our infrastructure. Could you kindly append an environment tag to each of the nameservers, distinguishing between "prod" and "non-prod"? This would greatly assist in mapping nameservers to their respective environments.
-
-Thank you so much for your continued support and attention to detail.
-
-Best regards,
+I have Built wiki page that MAP nameservers to their Location/regions. From my findings, CIE team manages these DNS servers. I am currently working to confirm that titan netplan configurations for DNS are compliant with each team. 
