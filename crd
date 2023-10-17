@@ -1,1 +1,1 @@
-I have Built wiki page that MAP nameservers to their Location/regions. From my findings, CIE team manages these DNS servers. I am currently working to confirm that titan netplan configurations for DNS are compliant with each team. 
+I have created a wiki page that maps nameservers to their respective locations/regions. Based on my research, it appears that the CIE team is responsible for managing these DNS servers. Currently, I am in the process of verifying that the Titan Netplan configurations for DNS align with the requirements of each team
