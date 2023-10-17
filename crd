@@ -1,3 +1,7 @@
+Loaded project from '/home/titan/op-obs-titan/auto'
+Starting: plan telemetry_collection::config_ssh_hostkey
+Starting: plan telemetry_collection::config_ssh_hostkey
+Starting: Set SSH Config Content on frun10872.geico.net, frun10873.geico.net
 Starting: Set SSH Config Content on frun10872.geico.net, frun10873.geico.net
 Running command 'echo 'Host *
     StrictHostKeyChecking no
@@ -5,28 +9,19 @@ Running command 'echo 'Host *
 Running command 'echo 'Host *
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null' > ~/.ssh/config' on ["frun10873.geico.net"]
-{"target":"frun10872.geico.net","action":"command","object":null,"status":"failure","value":{"_error":{"details":{},"kind":"puppetlabs.tasks/connect-error","msg":"Failed to connect to frun10872.geico.net: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\n@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @\r\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\nPermissions 0664 for '/home/titan/op-obs-titan/auto/ssh/bolt' are too open.\r\nIt is required that your private key files are NOT accessible by others.\r\nThis private key will be ignored.\r\nLoad key \"/home/titan/op-obs-titan/auto/ssh/bolt\": bad permissions\r\ntitan@frun10872.geico.net: Permission denied (publickey,password).\r\n","issue_code":"CONNECT_ERROR"}}}
-{"target":"frun10873.geico.net","action":"command","object":null,"status":"failure","value":{"_error":{"details":{},"kind":"puppetlabs.tasks/connect-error","msg":"Failed to connect to frun10873.geico.net: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\n@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @\r\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\nPermissions 0664 for '/home/titan/op-obs-titan/auto/ssh/bolt' are too open.\r\nIt is required that your private key files are NOT accessible by others.\r\nThis private key will be ignored.\r\nLoad key \"/home/titan/op-obs-titan/auto/ssh/bolt\": bad permissions\r\ntitan@frun10873.geico.net: Permission denied (publickey,password).\r\n","issue_code":"CONNECT_ERROR"}}}
-Finished: Set SSH Config Content with 2 failures in 0.19 sec
-Finished: Set SSH Config Content with 2 failures in 0.19 sec
-Finished: plan telemetry_collection::config_ssh_hostkey in 0.19 sec
-Finished: plan telemetry_collection::config_ssh_hostkey in 0.19 sec
-Failed on frun10872.geico.net:
-  Failed to connect to frun10872.geico.net: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  @         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
-  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  Permissions 0664 for '/home/titan/op-obs-titan/auto/ssh/bolt' are too open.
-  It is required that your private key files are NOT accessible by others.
-  This private key will be ignored.
-  Load key "/home/titan/op-obs-titan/auto/ssh/bolt": bad permissions
-  titan@frun10872.geico.net: Permission denied (publickey,password).
-Failed on frun10873.geico.net:
-  Failed to connect to frun10873.geico.net: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  @         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
-  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  Permissions 0664 for '/home/titan/op-obs-titan/auto/ssh/bolt' are too open.
-  It is required that your private key files are NOT accessible by others.
-  This private key will be ignored.
-  Load key "/home/titan/op-obs-titan/auto/ssh/bolt": bad permissions
-  titan@frun10873.geico.net: Permission denied (publickey,password).
-Failed on 2 targets: frun10872.geico.net,frun10873.geico.net
+{"target":"frun10872.geico.net","action":"command","object":"echo 'Host *\n    StrictHostKeyChecking no\n    UserKnownHostsFile /dev/null' > ~/.ssh/config","status":"success","value":{"stdout":"","stderr":"","merged_output":"","exit_code":0}}
+{"target":"frun10873.geico.net","action":"command","object":"echo 'Host *\n    StrictHostKeyChecking no\n    UserKnownHostsFile /dev/null' > ~/.ssh/config","status":"success","value":{"stdout":"","stderr":"","merged_output":"","exit_code":0}}
+Finished: Set SSH Config Content with 0 failures in 1.06 sec
+Running command 'chmod 600 ~/.ssh/config' on ["frun10872.geico.net"]
+Running command 'chmod 600 ~/.ssh/config' on ["frun10873.geico.net"]
+Finished: Set SSH Config Content with 0 failures in 1.06 sec
+Starting: Set correct permissions on SSH config on frun10872.geico.net, frun10873.geico.net
+Starting: Set correct permissions on SSH config on frun10872.geico.net, frun10873.geico.net
+{"target":"frun10872.geico.net","action":"command","object":"chmod 600 ~/.ssh/config","status":"success","value":{"stdout":"","stderr":"","merged_output":"","exit_code":0}}
+{"target":"frun10873.geico.net","action":"command","object":"chmod 600 ~/.ssh/config","status":"success","value":{"stdout":"","stderr":"","merged_output":"","exit_code":0}}
+Finished: Set correct permissions on SSH config with 0 failures in 0.47 sec
+Finished: Set correct permissions on SSH config with 0 failures in 0.47 sec
+Finished: plan telemetry_collection::config_ssh_hostkey in 1.53 sec
+Finished: plan telemetry_collection::config_ssh_hostkey in 1.53 sec
+Syntax error at '}'
+  (file: /home/titan/op-obs-titan/auto/plans/config_ssh_hostkey.yaml, line: 22)
