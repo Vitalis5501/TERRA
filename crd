@@ -14,28 +14,29 @@ steps:
   - name: all_targets
     eval: get_targets($targets)
 
-  - block:
-      - apply_prep: $all_targets
+  - name: apply_prep_step
+    apply_prep: $all_targets
 
-      - resources:
-          - type: file
-            title: "${::home}/.ssh"
-            parameters:
-              ensure: directory
-              owner: $::user
-              group: $::group
-              mode: '0700'
-          - type: file
-            title: "${::home}/.ssh/config"
-            parameters:
-              ensure: file
-              owner: $::user
-              group: $::group
-              mode: '0600'
-              content: $ssh_config_content
+  - resources:
+      - type: file
+        title: "${::home}/.ssh"
+        parameters:
+          ensure: directory
+          owner: $::user
+          group: $::group
+          mode: '0700'
+      - type: file
+        title: "${::home}/.ssh/config"
+        parameters:
+          ensure: file
+          owner: $::user
+          group: $::group
+          mode: '0600'
+          content: $ssh_config_content
+    target: $all_targets
 
-      - name: notify_ssh_config
-        eval: "Notify { 'SSH Configuration - ${var_node} Applied Successfully!': withpath => false }"
+  - name: notify_ssh_config
+    eval: "Notify { 'SSH Configuration - ${var_node} Applied Successfully!': withpath => false }"
     target: $all_targets
 
 return: $notify_ssh_config
