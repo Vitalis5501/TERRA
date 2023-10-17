@@ -1,1 +1,1 @@
-I have created a wiki page that maps nameservers to their respective locations/regions. Based on my research, it appears that the CIE team is responsible for managing these DNS servers. Currently, I am in the process of verifying that the Titan Netplan configurations for DNS align with the requirements of each team
+I have completed manual process to disable ssh host key verification challenge for all titan ubuntu servers. I am currently working to implement the solution into puppet bolt. I have written the puppet config plan that i will be testing in nonprod environment.  
