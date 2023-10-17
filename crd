@@ -1,97 +1,27 @@
-titan@frun10872:~/op-obs-titan/auto$ bolt plan run telemetry_collection::config_ssh_hostkey --target frun10873.geico.net
-Loaded project from '/home/titan/op-obs-titan/auto'
-Traceback (most recent call last):
-        31: from /opt/puppetlabs/bolt/bin/bolt:23:in `<main>'
-        30: from /opt/puppetlabs/bolt/bin/bolt:23:in `load'
-        29: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/exe/bolt:11:in `<top (required)>'
-        28: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:394:in `execute'
-        27: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:944:in `with_signal_handling'
-        26: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:395:in `block in execute'
-        25: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:927:in `with_error_handling'
-        24: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:521:in `block (2 levels) in execute'
-        23: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:639:in `process_command'
-        22: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/application.rb:354:in `run_plan'
-        21: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal.rb:546:in `get_plan_info'
-        20: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/loader.rb:69:in `from_string'
-        19: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/loader.rb:69:in `new'
-        18: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `initialize'
-        17: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `map'
-        16: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each'
-        15: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each_with_index'
-        14: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each'
-        13: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:65:in `block in initialize'
-        12: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:63:in `create'
-        11: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:116:in `validate'
-        10: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:116:in `each'
-         9: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:116:in `block in validate'
-         8: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:184:in `validate_puppet_code'
-         7: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:206:in `parse_code_string'
-         6: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/puppet-7.26.0/lib/puppet/pops/parser/evaluating_parser.rb:26:in `parse_string'
-         5: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/puppet-7.26.0/lib/puppet/pops/parser/parser_support.rb:140:in `parse_string'
-         4: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/puppet-7.26.0/lib/puppet/pops/parser/parser_support.rb:241:in `_parse'
-         3: from (eval):3:in `yyparse'
-         2: from (eval):3:in `_racc_yyparse_c'
-         1: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/puppet-7.26.0/lib/puppet/pops/parser/lexer2.rb:708:in `scan'
-/opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/puppet-7.26.0/lib/puppet/pops/parser/parser_support.rb:133:in `on_error': Syntax error at '{' (line: 3, column: 8) (Puppet::ParseErrorWithIssue)
-        24: from /opt/puppetlabs/bolt/bin/bolt:23:in `<main>'
-        23: from /opt/puppetlabs/bolt/bin/bolt:23:in `load'
-        22: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/exe/bolt:11:in `<top (required)>'
-        21: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:394:in `execute'
-        20: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:944:in `with_signal_handling'
-        19: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:395:in `block in execute'
-        18: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:927:in `with_error_handling'
-        17: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:521:in `block (2 levels) in execute'
-        16: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:639:in `process_command'
-        15: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/application.rb:354:in `run_plan'
-        14: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal.rb:546:in `get_plan_info'
-        13: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/loader.rb:69:in `from_string'
-        12: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/loader.rb:69:in `new'
-        11: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `initialize'
-        10: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `map'
-         9: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each'
-         8: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each_with_index'
-         7: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each'
-         6: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:65:in `block in initialize'
-         5: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:63:in `create'
-         4: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:116:in `validate'
-         3: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:116:in `each'
-         2: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:116:in `block in validate'
-         1: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:173:in `validate_puppet_code'
-/opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:197:in `rescue in validate_puppet_code': Error parsing "eval": Syntax error at '{' (Bolt::Error)
-        21: from /opt/puppetlabs/bolt/bin/bolt:23:in `<main>'
-        20: from /opt/puppetlabs/bolt/bin/bolt:23:in `load'
-        19: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/exe/bolt:11:in `<top (required)>'
-        18: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:394:in `execute'
-        17: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:944:in `with_signal_handling'
-        16: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:395:in `block in execute'
-        15: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:927:in `with_error_handling'
-        14: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:521:in `block (2 levels) in execute'
-        13: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:639:in `process_command'
-        12: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/application.rb:354:in `run_plan'
-        11: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal.rb:546:in `get_plan_info'
-        10: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/loader.rb:69:in `from_string'
-         9: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/loader.rb:69:in `new'
-         8: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `initialize'
-         7: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `map'
-         6: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each'
-         5: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each_with_index'
-         4: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:53:in `each'
-         3: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan.rb:65:in `block in initialize'
-         2: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:63:in `create'
-         1: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:115:in `validate'
-/opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/step.rb:118:in `rescue in validate': Parse error in step "apply_resources":  (Bolt::PAL::YamlPlan::Step::StepError)        
- Error parsing "eval": Syntax error at '{'
-        12: from /opt/puppetlabs/bolt/bin/bolt:23:in `<main>'
-        11: from /opt/puppetlabs/bolt/bin/bolt:23:in `load'
-        10: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/exe/bolt:11:in `<top (required)>'
-         9: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:394:in `execute'
-         8: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:944:in `with_signal_handling'
-         7: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:395:in `block in execute'
-         6: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:927:in `with_error_handling'
-         5: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:521:in `block (2 levels) in execute'
-         4: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/cli.rb:639:in `process_command'
-         3: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/application.rb:354:in `run_plan'
-         2: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal.rb:546:in `get_plan_info'
-         1: from /opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/loader.rb:68:in `from_string'
-/opt/puppetlabs/bolt/lib/ruby/gems/2.7.0/gems/bolt-3.27.4/lib/bolt/pal/yaml_plan/loader.rb:71:in `rescue in from_string': Parse error in step "apply_resources":  (Puppet::ParseError)
- Error parsing "eval": Syntax error at '{' (file: /home/titan/op-obs-titan/auto/plans/config_ssh_hostkey.yaml)
+# site-modules/profile/plans/ssh_config.yaml
+
+description: "Configure SSH to disable StrictHostKeyChecking"
+parameters:
+  targets:
+    type: TargetSpec
+    default: all
+    description: "The targets to run the plan on"
+
+steps:
+  - name: set_ssh_config_content
+    eval: |
+      $config_content = @("CONFIG")
+      Host *
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+      | CONFIG
+
+  - name: upload_config
+    command: "echo '${$config_content}' > ~/.ssh/config"
+    targets: $targets
+
+  - name: set_permissions
+    command: "chmod 600 ~/.ssh/config"
+    targets: $targets
+
+return: "SSH Config set successfully on ${$targets}"
