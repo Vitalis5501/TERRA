@@ -1,1 +1,60 @@
-curl -v https://localhost.jfrog.io/v2/docker-virtual/manifests/latest
+root@GEIPW05YP4X:/etc/containers# curl -v https://localhost.jfrog.io/v2/docker-virtual/manifests/latest
+*   Trying 18.232.172.199:443...
+* Connected to localhost.jfrog.io (18.232.172.199) port 443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+* TLSv1.0 (OUT), TLS header, Certificate Status (22):
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.2 (IN), TLS header, Certificate Status (22):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.2 (OUT), TLS header, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.2 (OUT), TLS header, Certificate Status (22):
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.2 (IN), TLS header, Finished (20):
+* TLSv1.2 (IN), TLS header, Certificate Status (22):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.2 (IN), TLS header, Supplemental data (23):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.2 (IN), TLS header, Supplemental data (23):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.2 (IN), TLS header, Supplemental data (23):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.2 (IN), TLS header, Supplemental data (23):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.2 (OUT), TLS header, Supplemental data (23):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* ALPN, server did not agree to a protocol
+* Server certificate:
+*  subject: CN=*.jfrog.io
+*  start date: Oct 14 09:33:07 2023 GMT
+*  expire date: Oct 28 09:33:07 2023 GMT
+*  subjectAltName: host "localhost.jfrog.io" matched cert's "*.jfrog.io"
+*  issuer: C=US; ST=California; O=Zscaler Inc.; OU=Zscaler Inc.; CN=Zscaler Intermediate Root CA (zscalerthree.net) (t)
+*  SSL certificate verify ok.
+* TLSv1.2 (OUT), TLS header, Supplemental data (23):
+> GET /v2/docker-virtual/manifests/latest HTTP/1.1
+> Host: localhost.jfrog.io
+> User-Agent: curl/7.81.0
+> Accept: */*
+>
+* TLSv1.2 (IN), TLS header, Supplemental data (23):
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 302 Moved Temporarily
+< Date: Thu, 19 Oct 2023 20:44:21 GMT
+< Content-Type: text/html
+< Content-Length: 138
+< Connection: keep-alive
+< Location: https://landing.jfrog.com/reactivate-server/localhost
+<
+<html>
+<head><title>302 Found</title></head>
+<body>
+<center><h1>302 Found</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+* Connection #0 to host localhost.jfrog.io left intact
