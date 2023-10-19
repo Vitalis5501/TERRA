@@ -1,3 +1,6 @@
+PS C:\Users\C226796\Downloads> docker buildx build  --tag ${localhost}.jfrog.io/${docker-titan-virtual}/titan:latest .
+[+] Building 0.0s (0/0)                                                                                                                                               docker:default
+ERROR: invalid tag "//titan:latest": invalid reference format
 sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
 To uninstall Docker and reinstall it on a Linux system, you can follow these steps:
 
