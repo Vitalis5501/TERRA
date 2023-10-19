@@ -1,6 +1,6 @@
-sudo cp /etc/containers/registries.conf /etc/containers/registries.conf.backup
-unqualified-search-registries = ["docker.io"]
-
-[[registry]]
-location = "localhost.jfrog.io"
-insecure = true
+root@GEIPW05YP4X:/etc/containers# podman push localhost.jfrog.io/docker-virtual/alpine:latest
+Getting image source signatures
+Copying blob cc2447e1835a skipped: already exists
+Copying config 8ca4688f4f done
+Writing manifest to image destination
+Storing signatures
