@@ -1,4 +1,2 @@
-PS C:\Users\C226796\Downloads> docker push localhost.jfrog.io/docker-virtual/app:latest
-The push refers to repository [localhost.jfrog.io/docker-virtual/app]
-01bb4fce3eb1: Retrying in 1 second
-received unexpected HTTP status: 200 OK
+4X:/etc/containers# podman push localhost.jfrog.io/docker-virtual/alpine:latest
+Error: initializing destination docker://localhost.jfrog.io/docker-virtual/alpine:latest: getting username and password: loading registries configuration "/etc/containers/registries.conf": mixing sysregistry v1/v2 is not supported
