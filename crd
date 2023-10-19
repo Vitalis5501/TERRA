@@ -1,6 +1,3 @@
-root@GEIPW05YP4X:/etc/containers# podman push localhost.jfrog.io/docker-virtual/alpine:latest
-Getting image source signatures
-Copying blob cc2447e1835a skipped: already exists
-Copying config 8ca4688f4f done
-Writing manifest to image destination
-Storing signatures
+root@GEIPW05YP4X:/etc/containers# podman pull localhost.jfrog.io/docker-virtual/alpine:latest
+Trying to pull localhost.jfrog.io/docker-virtual/alpine:latest...
+Error: initializing source docker://localhost.jfrog.io/docker-virtual/alpine:latest: pinging container registry localhost.jfrog.io: invalid status code from registry 409 (Conflict)
