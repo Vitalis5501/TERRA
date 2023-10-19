@@ -1,2 +1,6 @@
-4X:/etc/containers# podman push localhost.jfrog.io/docker-virtual/alpine:latest
-Error: initializing destination docker://localhost.jfrog.io/docker-virtual/alpine:latest: getting username and password: loading registries configuration "/etc/containers/registries.conf": mixing sysregistry v1/v2 is not supported
+sudo cp /etc/containers/registries.conf /etc/containers/registries.conf.backup
+unqualified-search-registries = ["docker.io"]
+
+[[registry]]
+location = "localhost.jfrog.io"
+insecure = true
