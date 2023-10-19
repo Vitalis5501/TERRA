@@ -1,1 +1,5 @@
-https://www.coachdevops.com/2023/10/install-jfrog-artifactory-on-ubuntu.html
+PS C:\Users\C226796\Downloads> docker buildx build  --tag localhost.jfrog.io/docker-titan-virtual/my-docker-image:latest
+ERROR: "docker buildx build" requires exactly 1 argument.
+See 'docker buildx build --help'.
+
+Usage:  docker buildx build [OPTIONS] PATH | URL | -
