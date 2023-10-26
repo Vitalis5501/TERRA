@@ -1,2 +1,1 @@
-2023-10-24T00:55:47.480Z [jfac ] [WARN ] [1ac4ca4a98ad8030] [o.j.c.ExecutionUtils:177      ] [jf-common-pool-2    ] - Retry 10 Elapsed 6.52 secs failed: Router readiness on URL http://localhost:8046/router/api/v1/system/readiness failed with error: Router readiness failed with status 503. Trying again
-2023-10-24T00:55:57.507Z [jfac ] [WARN ] [1ac4ca4a98ad8030] [o.j.c.ExecutionUtils:177      ] [jf-common-pool-2    ] - Retry 20 Elapsed 16.55 secs failed: Router readiness on URL
+Error while Peeking first byte: read tcp 10.250.43.229:8082->10.35.134.104:59291: read: connection timed out
