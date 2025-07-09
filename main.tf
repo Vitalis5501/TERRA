@@ -19,7 +19,7 @@ resource "opsgenie_schedule" "test" {
 }
 
 resource "opsgenie_schedule" "atlantis_schedule" {
-  name          = "atlantis_genieschedule"
+  name          = "atlantis_genie_schedule"
   description   = "schedule test"
   timezone      = "Europe/Rome"
   enabled       = false
