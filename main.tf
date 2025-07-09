@@ -15,7 +15,6 @@ provider "opsgenie" {
 resource "opsgenie_alert_policy" "test" {
   name               = "example policy"
   team_id            = "5f489b37-d2be-4a18-ac48-fd19864fb573"
-  policy_type        = "Create"
   policy_description = "This is sample policy"
   message            = "{{message}}"
 
