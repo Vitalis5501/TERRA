@@ -1,0 +1,14 @@
+version: 3
+projects:
+  - name: myproject
+    dir: .
+    workflow: default
+workflows:
+  default:
+    plan:
+      steps:
+        - run: terraform init -upgrade
+        - run: terraform plan -out=tfplan
+    apply:
+      steps:
+        - run: terraform apply tfplan
