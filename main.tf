@@ -12,14 +12,14 @@ provider "opsgenie" {
   api_url = "api.opsgenie.com"
 }
 resource "opsgenie_schedule" "test" {
-  name        = "genieschedule-%s"
+  name        = "atlantisgenieschedule"
   description = "schedule test"
   timezone    = "Europe/Rome"
   enabled     = false
 }
 
 resource "opsgenie_schedule" "atlantis_schedule" {
-  name          = "genieschedule-%s"
+  name          = "atlantis_genieschedule"
   description   = "schedule test"
   timezone      = "Europe/Rome"
   enabled       = false
