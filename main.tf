@@ -12,7 +12,7 @@ provider "opsgenie" {
   api_url = "https://api.opsgenie.com"
 }
 
-resource "opsgenie_alert" "etlantisalert" {
+resource "opsgenie_alert_policy" "etlantis_alert" {
   message     = "Example alert from Terraform"
   description = "This alert was created via Terraform using a Team API Key."
   priority    = "P3"
@@ -24,3 +24,5 @@ resource "opsgenie_alert" "etlantisalert" {
 
   tags = ["terraform", "test"]
 }
+
+
