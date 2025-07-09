@@ -21,12 +21,11 @@ resource "opsgenie_user" "example_user" {
   username  = "example_user@example.com"
   full_name = "Example User"
   timezone  = "UTC"
-  # optional: user_role_id if you want a non-default role
-  # user_role_id = "user" 
+  role      = "User"  # Changed from user_role_id to role
 }
 
 resource "opsgenie_team_membership" "example_membership" {
   team_id = opsgenie_team.atlantis.id
   user_id = opsgenie_user.example_user.id
-  role    = "User"
+  role    = "user"  # Changed from "User" to "user" (lowercase)
 }
