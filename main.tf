@@ -9,20 +9,37 @@ terraform {
 
 provider "opsgenie" {
   api_key = var.opsgenie_api_key
-  api_url = "https://api.opsgenie.com"
+  api_url = "api.opsgenie.com"
 }
 
-resource "opsgenie_alert_policy" "etlantis_alert" {
-  message     = "Example alert from Terraform"
-  description = "This alert was created via Terraform using a Team API Key."
-  priority    = "P3"
+resource "opsgenie_alert_policy" "test" {
+  name               = "example policy"
+  team_id            = "5f489b37-d2be-4a18-ac48-fd19864fb573"
+  policy_type        = "Create"
+  policy_description = "This is sample policy"
+  message            = "{{message}}"
 
-  responders {
-    type = "team"
-    id   = "5f489b37-d2be-4a18-ac48-fd19864fb573"  
+  time_restriction {
+    type = "weekday-and-time-of-day"
+
+    restrictions {
+      start_day  = "sunday"
+      start_hour = 21
+      start_min  = 0
+      end_day    = "monday"
+      end_hour   = 7
+      end_min    = 0
+    }
+
+    restrictions {
+      start_day  = "monday"
+      start_hour = 22
+      start_min  = 0
+      end_day    = "tuesday"
+      end_hour   = 7
+      end_min    = 0
+    }
   }
-
-  tags = ["terraform", "test"]
 }
 
 
