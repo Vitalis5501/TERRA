@@ -1,1 +1,1 @@
-opsgenie_api_key = "11111111-2222-3333-4444-555555555555"
+opsgenie_api_key = "8ea75d21-6c53-4aca-9a5e-09be6827f594"
