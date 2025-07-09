@@ -13,7 +13,7 @@ provider "opsgenie" {
 }
 
 resource "opsgenie_alert_policy" "test" {
-  name               = "example policy"
+  name               = "example policy-renamed"
   team_id            = "5f489b37-d2be-4a18-ac48-fd19864fb573"
   policy_description = "This is sample policy"
   message            = "{{message}}"
