@@ -9,7 +9,7 @@ terraform {
 
 provider "opsgenie" {
   api_key = var.opsgenie_api_key
-  api_url = "https://api.opsgenie.com"
+  api_url = "api.opsgenie.com"
 }
 
 resource "opsgenie_user" "example_user" {
