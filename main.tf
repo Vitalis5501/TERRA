@@ -9,22 +9,19 @@ terraform {
 
 provider "opsgenie" {
   api_key = var.opsgenie_api_key
-  # Optional, depending on region
-  # api_url = "https://api.opsgenie.com"
+  api_url = "api.opsgenie.com"
+}
+resource "opsgenie_schedule" "test" {
+  name        = "atlantisgenieschedule2"
+  description = "schedule test"
+  timezone    = "Europe/Rome"
+  enabled     = false
 }
 
-resource "opsgenie_team" "example_team" {
-  name        = "ExampleTeam"
-  description = "This is a team created by Terraform."
-}
-
-resource "opsgenie_user" "example_user" {
-  username    = "example_user@example.com"
-  full_name   = "Example User"
-  role        = "User"
-  user_role   = "User"
-  timezone    = "UTC"
-
-  # Optional: assign to the team
-  teams = [opsgenie_team.example_team.id]
+resource "opsgenie_schedule" "atlantis_schedule" {
+  name          = "atlantis_genie_schedule"
+  description   = "schedule test"
+  timezone      = "Europe/Rome"
+  enabled       = false
+  owner_team_id = "5f489b37-d2be-4a18-ac48-fd19864fb573"
 }

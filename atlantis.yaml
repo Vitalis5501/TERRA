@@ -1,4 +1,5 @@
 version: 3
+automerge: true
 projects:
   - name: myproject
     dir: .
@@ -12,3 +13,4 @@ workflows:
     apply:
       steps:
         - run: terraform apply tfplan
+
