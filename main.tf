@@ -10,7 +10,7 @@ terraform {
 provider "opsgenie" {
   api_key = var.opsgenie_api_key
   # Optional, depending on region
-  # api_url = "https://api.opsgenie.com"
+  api_url = "https://api.opsgenie.com"
 }
 
 resource "opsgenie_team" "example_team" {
