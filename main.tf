@@ -9,7 +9,6 @@ terraform {
 
 provider "opsgenie" {
   api_key = var.opsgenie_api_key
-  # Optional, depending on region
   api_url = "https://api.opsgenie.com"
 }
 
@@ -19,12 +18,15 @@ resource "opsgenie_team" "atlantis" {
 }
 
 resource "opsgenie_user" "example_user" {
-  username    = "example_user@example.com"
-  full_name   = "Example User"
-  role        = "User"
-  #user_role   = "User"
-  timezone    = "UTC"
+  username  = "example_user@example.com"
+  full_name = "Example User"
+  timezone  = "UTC"
+  # optional: user_role_id if you want a non-default role
+  # user_role_id = "user" 
+}
 
-  # Optional: assign to the team
-  teams = [opsgenie_team.atlantis.id]
+resource "opsgenie_team_membership" "example_membership" {
+  team_id = opsgenie_team.atlantis.id
+  user_id = opsgenie_user.example_user.id
+  role    = "User"
 }
