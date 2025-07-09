@@ -7,7 +7,6 @@ terraform {
   }
 }
 
-
 provider "opsgenie" {
   api_key = var.opsgenie_api_key
   # Optional, depending on region
