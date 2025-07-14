@@ -8,9 +8,9 @@ workflows:
   default:
     plan:
       steps:
-        - run: terraform init -upgrade
-        - run: terraform plan -out=tfplan
+        - run: terraform init -upgrade -no-color
+        - run: terraform plan -out=tfplan -no-color
     apply:
       steps:
-        - run: terraform apply tfplan
+        - run: terraform apply tfplan -no-color
 
