@@ -4,10 +4,10 @@ projects:
   - name: myproject
     dir: .
     workflow: default
+    env:
+      TF_CLI_ARGS: "-no-color"  # ✅ Correct place
 workflows:
   default:
-    env:
-      TF_CLI_ARGS: "-no-color"
     plan:
       steps:
         - run: terraform init -upgrade
