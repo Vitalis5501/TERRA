@@ -6,6 +6,8 @@ projects:
     workflow: default
 workflows:
   default:
+    env:
+      TF_CLI_ARGS: "-no-color"
     plan:
       steps:
         - run: terraform init -upgrade
@@ -13,4 +15,3 @@ workflows:
     apply:
       steps:
         - run: terraform apply tfplan
-
