@@ -15,7 +15,7 @@ resource "opsgenie_schedule" "test" {
   name        = "atlantisgenieschedule"
   description = "schedule test"
   timezone    = "Europe/Rome"
-  enabled     = false
+  enabled     = true
 }
 
 resource "opsgenie_schedule" "atlantis_schedule" {
