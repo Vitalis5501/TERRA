@@ -25,12 +25,5 @@ resource "opsgenie_schedule" "dynamic_schedules" {
   description = each.value.description
   timezone    = each.value.timezone
   enabled     = each.value.enabled
-
-  # Optional owner_team_id if defined
-  dynamic "owner_team_id" {
-    for_each = each.value.owner_team_id != null ? [each.value.owner_team_id] : []
-    content {
-      owner_team_id = owner_team_id.value
-    }
-  }
+  owner_team_id = each.value.owner_team_id
 }
