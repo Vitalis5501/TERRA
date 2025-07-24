@@ -15,7 +15,8 @@ schedules:
     timezone: "Europe/Rome"
     enabled: false
     owner_team_id: "5f489b37-d2be-4a18-ac48-fd19864fb573"
-  - name: "atlantis_genie_schedule/teamBX"
+
+  - name: "atlantis_genie_schedule_teamBX"
     description: "Test schedule"
     timezone: "Europe/Rome"
     enabled: true
