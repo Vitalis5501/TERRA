@@ -1,0 +1,11 @@
+schedules:
+  - name: "atlantisgenieschedule_finalise"
+    description: "schedule test"
+    timezone: "Europe/Rome"
+    enabled: true
+
+  - name: "atlantis_genie_schedule"
+    description: "schedule test"
+    timezone: "Europe/Rome"
+    enabled: false
+    owner_team_id: "5f489b37-d2be-4a18-ac48-fd19864fb573"
