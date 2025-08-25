@@ -3,7 +3,7 @@ name: DORA Metrics Collection
 on:
   workflow_dispatch:
   schedule:
-    # Run every hour
+    # Run every 2 minutes for testing (Note: GitHub Actions minimum is 5 minutes)
     - cron: '*/2 * * * *'
   push:
     branches:
@@ -30,8 +30,15 @@ jobs:
       - name: Calculate Deployment Frequency
         id: deployment_freq
         run: |
-          # Get deployments in the last 30 days
-          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          # Use shorter window for testing if test_mode is true
+          if [[ "${{ github.event.inputs.test_mode }}" == "true" ]]; then
+            TIME_WINDOW=$(date -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
+            DAYS=7
+            echo "::notice::Running in test mode with 7-day window"
+          else
+            TIME_WINDOW=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+            DAYS=30
+          fi
           
           # Count successful deployments to production
           DEPLOYMENTS=$(gh api \
@@ -39,12 +46,12 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/${{ github.repository }}/deployments \
             --paginate \
-            --jq "[.[] | select(.created_at > \"$THIRTY_DAYS_AGO\" and .environment == \"production\")] | length")
+            --jq "[.[] | select(.created_at > \"$TIME_WINDOW\" and .environment == \"production\")] | length")
           
           echo "deployments_count=$DEPLOYMENTS" >> $GITHUB_OUTPUT
           
           # Calculate daily deployment frequency
-          DAILY_FREQ=$(echo "scale=2; $DEPLOYMENTS / 30" | bc)
+          DAILY_FREQ=$(echo "scale=2; $DEPLOYMENTS / $DAYS" | bc)
           echo "daily_frequency=$DAILY_FREQ" >> $GITHUB_OUTPUT
 
       - name: Push Deployment Frequency to Prometheus
