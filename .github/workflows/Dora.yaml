@@ -1,0 +1,213 @@
+name: DORA Metrics Collection
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    types: [closed]
+  issues:
+    types: [opened, closed]
+
+env:
+  PROMETHEUS_PUSHGATEWAY_URL: ${{ secrets.PROMETHEUS_PUSHGATEWAY_URL }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  collect-deployment-frequency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Deployment Frequency
+        id: deployment_freq
+        run: |
+          # Get deployments in the last 30 days
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          
+          # Count successful deployments to production
+          DEPLOYMENTS=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/deployments \
+            --paginate \
+            --jq "[.[] | select(.created_at > \"$THIRTY_DAYS_AGO\" and .environment == \"production\")] | length")
+          
+          echo "deployments_count=$DEPLOYMENTS" >> $GITHUB_OUTPUT
+          
+          # Calculate daily deployment frequency
+          DAILY_FREQ=$(echo "scale=2; $DEPLOYMENTS / 30" | bc)
+          echo "daily_frequency=$DAILY_FREQ" >> $GITHUB_OUTPUT
+
+      - name: Push Deployment Frequency to Prometheus
+        run: |
+          cat <<EOF | curl --data-binary @- ${PROMETHEUS_PUSHGATEWAY_URL}/metrics/job/dora_metrics/instance/${{ github.repository }}
+          # TYPE deployment_frequency gauge
+          # HELP deployment_frequency Number of deployments per day
+          deployment_frequency{repository="${{ github.repository }}",environment="production"} ${{ steps.deployment_freq.outputs.daily_frequency }}
+          # TYPE deployment_count_30d counter
+          # HELP deployment_count_30d Total deployments in last 30 days
+          deployment_count_30d{repository="${{ github.repository }}",environment="production"} ${{ steps.deployment_freq.outputs.deployments_count }}
+          EOF
+
+  collect-lead-time:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Lead Time for Changes
+        id: lead_time
+        run: |
+          # Get merged PRs in the last 30 days
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          
+          # Calculate average lead time from commit to deployment
+          LEAD_TIMES=$(gh pr list \
+            --state merged \
+            --base main \
+            --limit 100 \
+            --json number,createdAt,mergedAt \
+            --jq '.[] | select(.mergedAt > "'$THIRTY_DAYS_AGO'") | ((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600')
+          
+          if [ -n "$LEAD_TIMES" ]; then
+            AVG_LEAD_TIME=$(echo "$LEAD_TIMES" | awk '{sum+=$1; count++} END {if (count>0) printf "%.2f", sum/count; else print "0"}')
+          else
+            AVG_LEAD_TIME=0
+          fi
+          
+          echo "average_lead_time_hours=$AVG_LEAD_TIME" >> $GITHUB_OUTPUT
+
+      - name: Push Lead Time to Prometheus
+        run: |
+          cat <<EOF | curl --data-binary @- ${PROMETHEUS_PUSHGATEWAY_URL}/metrics/job/dora_metrics/instance/${{ github.repository }}
+          # TYPE lead_time_for_changes_hours gauge
+          # HELP lead_time_for_changes_hours Average lead time from commit to deployment in hours
+          lead_time_for_changes_hours{repository="${{ github.repository }}"} ${{ steps.lead_time.outputs.average_lead_time_hours }}
+          EOF
+
+  collect-mttr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Calculate Mean Time to Recovery
+        id: mttr
+        run: |
+          # Get incidents (issues labeled as 'incident' or 'bug' that are closed)
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          
+          # Calculate MTTR from incident issues
+          MTTR_DATA=$(gh issue list \
+            --state closed \
+            --label "incident,bug" \
+            --limit 100 \
+            --json number,createdAt,closedAt,labels \
+            --jq '.[] | select(.closedAt > "'$THIRTY_DAYS_AGO'") | ((.closedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600')
+          
+          if [ -n "$MTTR_DATA" ]; then
+            AVG_MTTR=$(echo "$MTTR_DATA" | awk '{sum+=$1; count++} END {if (count>0) printf "%.2f", sum/count; else print "0"}')
+            INCIDENT_COUNT=$(echo "$MTTR_DATA" | wc -l)
+          else
+            AVG_MTTR=0
+            INCIDENT_COUNT=0
+          fi
+          
+          echo "average_mttr_hours=$AVG_MTTR" >> $GITHUB_OUTPUT
+          echo "incident_count=$INCIDENT_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Push MTTR to Prometheus
+        run: |
+          cat <<EOF | curl --data-binary @- ${PROMETHEUS_PUSHGATEWAY_URL}/metrics/job/dora_metrics/instance/${{ github.repository }}
+          # TYPE mean_time_to_recovery_hours gauge
+          # HELP mean_time_to_recovery_hours Average time to recover from incidents in hours
+          mean_time_to_recovery_hours{repository="${{ github.repository }}"} ${{ steps.mttr.outputs.average_mttr_hours }}
+          # TYPE incident_count_30d counter
+          # HELP incident_count_30d Number of incidents in last 30 days
+          incident_count_30d{repository="${{ github.repository }}"} ${{ steps.mttr.outputs.incident_count }}
+          EOF
+
+  collect-change-failure-rate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Change Failure Rate
+        id: cfr
+        run: |
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          
+          # Get all deployments
+          TOTAL_DEPLOYMENTS=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/deployments \
+            --paginate \
+            --jq "[.[] | select(.created_at > \"$THIRTY_DAYS_AGO\")] | length")
+          
+          # Get failed deployments (assuming failure status or rollback commits)
+          FAILED_DEPLOYMENTS=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/deployments \
+            --paginate \
+            --jq "[.[] | select(.created_at > \"$THIRTY_DAYS_AGO\")] | length" | \
+            while read deployment_id; do
+              gh api \
+                -H "Accept: application/vnd.github+json" \
+                /repos/${{ github.repository }}/deployments/$deployment_id/statuses \
+                --jq '[.[] | select(.state == "failure" or .state == "error")] | length'
+            done | awk '{sum+=$1} END {print sum}')
+          
+          if [ "$TOTAL_DEPLOYMENTS" -gt 0 ]; then
+            CFR=$(echo "scale=4; $FAILED_DEPLOYMENTS / $TOTAL_DEPLOYMENTS * 100" | bc)
+          else
+            CFR=0
+          fi
+          
+          echo "change_failure_rate=$CFR" >> $GITHUB_OUTPUT
+          echo "total_deployments=$TOTAL_DEPLOYMENTS" >> $GITHUB_OUTPUT
+          echo "failed_deployments=$FAILED_DEPLOYMENTS" >> $GITHUB_OUTPUT
+
+      - name: Push Change Failure Rate to Prometheus
+        run: |
+          cat <<EOF | curl --data-binary @- ${PROMETHEUS_PUSHGATEWAY_URL}/metrics/job/dora_metrics/instance/${{ github.repository }}
+          # TYPE change_failure_rate gauge
+          # HELP change_failure_rate Percentage of deployments causing failure in production
+          change_failure_rate{repository="${{ github.repository }}"} ${{ steps.cfr.outputs.change_failure_rate }}
+          # TYPE total_deployments_30d counter
+          # HELP total_deployments_30d Total deployments in last 30 days
+          total_deployments_30d{repository="${{ github.repository }}"} ${{ steps.cfr.outputs.total_deployments }}
+          # TYPE failed_deployments_30d counter
+          # HELP failed_deployments_30d Failed deployments in last 30 days
+          failed_deployments_30d{repository="${{ github.repository }}"} ${{ steps.cfr.outputs.failed_deployments }}
+          EOF
+
+  push-collection-metadata:
+    runs-on: ubuntu-latest
+    needs: [collect-deployment-frequency, collect-lead-time, collect-mttr, collect-change-failure-rate]
+    if: always()
+    steps:
+      - name: Push Collection Timestamp
+        run: |
+          TIMESTAMP=$(date +%s)
+          cat <<EOF | curl --data-binary @- ${PROMETHEUS_PUSHGATEWAY_URL}/metrics/job/dora_metrics/instance/${{ github.repository }}
+          # TYPE dora_metrics_last_collection_timestamp gauge
+          # HELP dora_metrics_last_collection_timestamp Timestamp of last DORA metrics collection
+          dora_metrics_last_collection_timestamp{repository="${{ github.repository }}"} $TIMESTAMP
+          # TYPE dora_metrics_collection_success gauge
+          # HELP dora_metrics_collection_success Whether the last collection was successful (1) or not (0)
+          dora_metrics_collection_success{repository="${{ github.repository }}"} 1
+          EOF
