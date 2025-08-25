@@ -9,10 +9,11 @@ on:
     branches:
       - main
       - master
+      - test
 
 env:
   PROMETHEUS_PUSHGATEWAY_URL: ${{ secrets.PROMETHEUS_PUSHGATEWAY_URL }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
 jobs:
   collect-deployment-frequency:
