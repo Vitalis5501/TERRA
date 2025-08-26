@@ -26,29 +26,39 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug Deployments
+        run: |
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "THIRTY_DAYS_AGO=$THIRTY_DAYS_AGO"
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/deployments \
+            --paginate \
+            --jq "[.[] | select(.created_at > \"$THIRTY_DAYS_AGO\" and .environment == \"test\")]" > deployments.json
+          echo "Raw deployments data:"
+          cat deployments.json
+          DEPLOYMENTS=$(cat deployments.json | jq 'length')
+          echo "Deployments count: $DEPLOYMENTS"
+
       - name: Calculate Deployment Frequency
         id: deployment_freq
         run: |
-          # Get deployments in the last 30 days
           THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
-          
-          # Count successful deployments to test branch (treated as production)
           DEPLOYMENTS=$(gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/${{ github.repository }}/deployments \
             --paginate \
             --jq "[.[] | select(.created_at > \"$THIRTY_DAYS_AGO\" and .environment == \"test\")] | length" || echo "0")
-          
           echo "deployments_count=${DEPLOYMENTS}" >> $GITHUB_OUTPUT
-          
-          # Calculate daily deployment frequency
           if [ "$DEPLOYMENTS" -gt 0 ]; then
             DAILY_FREQ=$(echo "scale=2; $DEPLOYMENTS / 30" | bc)
           else
             DAILY_FREQ=0
           fi
           echo "daily_frequency=${DAILY_FREQ}" >> $GITHUB_OUTPUT
+          echo "Calculated daily frequency: $DAILY_FREQ"
 
       - name: Push Deployment Frequency to Prometheus
         run: |
@@ -71,27 +81,38 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug Pull Requests
+        run: |
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "THIRTY_DAYS_AGO=$THIRTY_DAYS_AGO"
+          gh pr list \
+            --state merged \
+            --base test \
+            --limit 100 \
+            --json number,createdAt,mergedAt \
+            --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\")]" > prs.json
+          echo "Raw PRs data:"
+          cat prs.json
+          PR_COUNT=$(cat prs.json | jq 'length')
+          echo "Merged PR count: $PR_COUNT"
+
       - name: Calculate Lead Time for Changes
         id: lead_time
         run: |
-          # Get merged PRs in the last 30 days
           THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
-          
-          # Calculate average lead time from commit to deployment
           LEAD_TIMES=$(gh pr list \
             --state merged \
             --base test \
             --limit 100 \
             --json number,createdAt,mergedAt \
             --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\")] | map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
-          
           if [ -z "$LEAD_TIMES" ] || [ "$LEAD_TIMES" = "null" ]; then
             AVG_LEAD_TIME=0
           else
             AVG_LEAD_TIME=$LEAD_TIMES
           fi
-          
           echo "average_lead_time_hours=${AVG_LEAD_TIME}" >> $GITHUB_OUTPUT
+          echo "Calculated average lead time (hours): $AVG_LEAD_TIME"
 
       - name: Push Lead Time to Prometheus
         run: |
@@ -109,29 +130,47 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Debug Incidents
+        run: |
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "THIRTY_DAYS_AGO=$THIRTY_DAYS_AGO"
+          gh issue list \
+            --state closed \
+            --label incident \
+            --limit 100 \
+            --json number,createdAt,closedAt \
+            --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")]" > incidents.json
+          echo "Raw incidents data:"
+          cat incidents.json
+          INCIDENT_COUNT=$(cat incidents.json | jq 'length')
+          echo "Incident count: $INCIDENT_COUNT"
+          gh issue list \
+            --state closed \
+            --label bug \
+            --limit 100 \
+            --json number,createdAt,closedAt \
+            --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")]" > bugs.json
+          echo "Raw bugs data:"
+          cat bugs.json
+          BUG_COUNT=$(cat bugs.json | jq 'length')
+          echo "Bug count: $BUG_COUNT"
+
       - name: Calculate Mean Time to Recovery
         id: mttr
         run: |
-          # Get incidents (issues labeled as 'incident' or 'bug' that are closed)
           THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
-          
-          # Calculate MTTR from incident issues
           MTTR_DATA=$(gh issue list \
             --state closed \
             --label incident \
             --limit 100 \
             --json number,createdAt,closedAt \
             --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")] | map(((.closedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)" || echo "[]")
-          
-          # Check for bug label separately
           BUG_DATA=$(gh issue list \
             --state closed \
             --label bug \
             --limit 100 \
             --json number,createdAt,closedAt \
             --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")] | map(((.closedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)" || echo "[]")
-          
-          # Combine and calculate average
           if [ "$MTTR_DATA" != "[]" ] && [ -n "$MTTR_DATA" ]; then
             AVG_MTTR=$(echo "$MTTR_DATA" | jq 'add / length // 0')
             INCIDENT_COUNT=$(echo "$MTTR_DATA" | jq 'length')
@@ -139,9 +178,10 @@ jobs:
             AVG_MTTR=0
             INCIDENT_COUNT=0
           fi
-          
           echo "average_mttr_hours=${AVG_MTTR}" >> $GITHUB_OUTPUT
           echo "incident_count=${INCIDENT_COUNT}" >> $GITHUB_OUTPUT
+          echo "Calculated average MTTR (hours): $AVG_MTTR"
+          echo "Incident count: $INCIDENT_COUNT"
 
       - name: Push MTTR to Prometheus
         run: |
@@ -164,30 +204,42 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug Deployments for CFR
+        run: |
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "THIRTY_DAYS_AGO=$THIRTY_DAYS_AGO"
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/deployments \
+            --paginate \
+            --jq "[.[] | select(.created_at > \"$THIRTY_DAYS_AGO\" and .environment == \"test\")]" > deployments_cfr.json
+          echo "Raw deployments data for CFR:"
+          cat deployments_cfr.json
+          TOTAL_DEPLOYMENTS=$(cat deployments_cfr.json | jq 'length')
+          echo "Total deployments count: $TOTAL_DEPLOYMENTS"
+
       - name: Calculate Change Failure Rate
         id: cfr
         run: |
           THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
-          
-          # Get all deployments for test branch (production)
           TOTAL_DEPLOYMENTS=$(gh api \
             -H "Accept: application/vnd.github+json" \
             /repos/${{ github.repository }}/deployments \
             --paginate \
             --jq "[.[] | select(.created_at > \"$THIRTY_DAYS_AGO\" and .environment == \"test\")] | length" || echo "0")
-          
           # For now, set failed deployments to 0 since getting status is complex
           FAILED_DEPLOYMENTS=0
-          
           if [ "$TOTAL_DEPLOYMENTS" -gt 0 ]; then
             CFR=$(echo "scale=4; $FAILED_DEPLOYMENTS / $TOTAL_DEPLOYMENTS * 100" | bc)
           else
             CFR=0
           fi
-          
           echo "change_failure_rate=${CFR}" >> $GITHUB_OUTPUT
           echo "total_deployments=${TOTAL_DEPLOYMENTS}" >> $GITHUB_OUTPUT
           echo "failed_deployments=${FAILED_DEPLOYMENTS}" >> $GITHUB_OUTPUT
+          echo "Calculated change failure rate (%): $CFR"
+          echo "Total deployments: $TOTAL_DEPLOYMENTS"
+          echo "Failed deployments: $FAILED_DEPLOYMENTS"
 
       - name: Push Change Failure Rate to Prometheus
         run: |
@@ -212,6 +264,7 @@ jobs:
       - name: Push Collection Timestamp
         run: |
           TIMESTAMP=$(date +%s)
+          echo "Collection timestamp: $TIMESTAMP"
           cat <<EOF | curl --data-binary @- ${PROMETHEUS_PUSHGATEWAY_URL}/metrics/job/dora_metrics/instance/metadata
           # TYPE dora_metrics_last_collection_timestamp gauge
           # HELP dora_metrics_last_collection_timestamp Timestamp of last DORA metrics collection
