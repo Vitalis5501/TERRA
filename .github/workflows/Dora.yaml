@@ -49,14 +49,14 @@ jobs:
           echo "Checking all merged PRs:"
           gh pr list \
             --state merged \
-            --limit 100 \
+            --limit 50 \
             --json number,createdAt,mergedAt,baseRefName \
             --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\")] | {count: length, bases: [.[].baseRefName] | unique}" > all_prs.json
           cat all_prs.json
           echo "Checking all closed issues:"
           gh issue list \
             --state closed \
-            --limit 100 \
+            --limit 10 \
             --json number,createdAt,closedAt,labels \
             --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")] | {count: length, labels: [.[].labels[].name] | unique}" > all_issues.json
           cat all_issues.json
@@ -96,7 +96,7 @@ jobs:
             PR_DATA=$(gh pr list \
               --state merged \
               --base $BRANCH \
-              --limit 100 \
+              --limit 10 \
               --json number,createdAt,mergedAt,commits \
               --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\")] | {count: length, commits: map(.commits[].sha) | length, merge_times: map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)}")
             MERGED_COMMITS=$(echo "$PR_DATA" | jq '.commits // 0')
@@ -108,7 +108,7 @@ jobs:
           done
           PR_DATA_OTHER=$(gh pr list \
             --state merged \
-            --limit 100 \
+            --limit 10 \
             --json number,createdAt,mergedAt,baseRefName,commits \
             --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\" and .baseRefName != \"test\" and .baseRefName != \"master\")] | {count: length, commits: map(.commits[].sha) | length, merge_times: map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)}")
           MERGED_COMMITS_OTHER=$(echo "$PR_DATA_OTHER" | jq '.commits // 0')
@@ -153,7 +153,7 @@ jobs:
             LEAD_TIMES=$(gh pr list \
               --state merged \
               --base $BRANCH \
-              --limit 100 \
+              --limit 10 \
               --json number,createdAt,mergedAt \
               --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\")] | map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
             if [ -z "$LEAD_TIMES" ] || [ "$LEAD_TIMES" = "null" ]; then
@@ -166,7 +166,7 @@ jobs:
           done
           LEAD_TIMES_OTHER=$(gh pr list \
             --state merged \
-            --limit 100 \
+            --limit 10 \
             --json number,createdAt,mergedAt,baseRefName \
             --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\" and .baseRefName != \"test\" and .baseRefName != \"master\")] | map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
           if [ -z "$LEAD_TIMES_OTHER" ] || [ "$LEAD_TIMES_OTHER" = "null" ]; then
@@ -251,7 +251,7 @@ jobs:
             REVIEW_TIMES=$(gh pr list \
               --state merged \
               --base $BRANCH \
-              --limit 100 \
+              --limit 10 \
               --json number,createdAt,reviews \
               --jq "[.[] | select(.reviews != null and .reviews != [] and (.mergedAt > \"$THIRTY_DAYS_AGO\"))] | map(((.reviews[0].submittedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
             if [ -z "$REVIEW_TIMES" ] || [ "$REVIEW_TIMES" = "null" ]; then
@@ -264,7 +264,7 @@ jobs:
           done
           REVIEW_TIMES_OTHER=$(gh pr list \
             --state merged \
-            --limit 100 \
+            --limit 10 \
             --json number,createdAt,reviews,baseRefName \
             --jq "[.[] | select(.baseRefName != \"test\" and .baseRefName != \"master\" and .reviews != null and .reviews != [] and (.mergedAt > \"$THIRTY_DAYS_AGO\"))] | map(((.reviews[0].submittedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
           if [ -z "$REVIEW_TIMES_OTHER" ] || [ "$REVIEW_TIMES_OTHER" = "null" ]; then
@@ -278,13 +278,13 @@ jobs:
           MTTR_DATA=$(gh issue list \
             --state closed \
             --label incident \
-            --limit 100 \
+            --limit 10 \
             --json number,createdAt,closedAt \
             --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")] | map(((.closedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)" || echo "[]")
           BUG_DATA=$(gh issue list \
             --state closed \
             --label bug \
-            --limit 100 \
+            --limit 10 \
             --json number,createdAt,closedAt \
             --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")] | map(((.closedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)" || echo "[]")
           if [ "$MTTR_DATA" != "[]" ] && [ -n "$MTTR_DATA" ]; then
