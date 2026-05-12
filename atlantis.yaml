@@ -1,9 +1,18 @@
 version: 3
 automerge: true
+
 projects:
   - name: myproject
     dir: .
     workflow: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "*.yaml"
+        - "*.yml"
+
 workflows:
   default:
     plan:
@@ -13,4 +22,3 @@ workflows:
     apply:
       steps:
         - run: terraform apply tfplan -no-color
-

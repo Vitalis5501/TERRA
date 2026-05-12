@@ -1,0 +1,421 @@
+name: DORA Metrics Collection
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every 5 minutes (GitHub minimum)
+    - cron: '*/5 * * * *'
+  push:
+    branches:
+      - main
+      - master
+      - test
+
+env:
+  PROMETHEUS_PUSHGATEWAY_URL: ${{ secrets.PROMETHEUS_PUSHGATEWAY_URL }}
+  GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+jobs:
+  collect-metrics:
+    runs-on: ubuntu-latest
+    # Only export metrics for test branch
+    if: github.ref == 'refs/heads/test'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Debug Repository Data
+        run: |
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "THIRTY_DAYS_AGO=$THIRTY_DAYS_AGO"
+          echo "Checking all branches:"
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/branches \
+            --jq '[.[] | .name]' > branches.json
+          echo "Available branches:"
+          cat branches.json
+          echo "Checking all workflow runs:"
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/runs \
+            --paginate \
+            --jq "[.workflow_runs[] | select(.created_at > \"$THIRTY_DAYS_AGO\")] | {count: length, branches: [.[].head_branch] | unique}" > all_workflow_runs.json
+          cat all_workflow_runs.json
+          echo "Checking all merged PRs:"
+          gh pr list \
+            --state merged \
+            --limit 50 \
+            --json number,createdAt,mergedAt,baseRefName \
+            --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\")] | {count: length, bases: [.[].baseRefName] | unique}" > all_prs.json
+          cat all_prs.json
+          echo "Checking all closed issues:"
+          gh issue list \
+            --state closed \
+            --limit 10 \
+            --json number,createdAt,closedAt,labels \
+            --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")] | {count: length, labels: [.[].labels[].name] | unique}" > all_issues.json
+          cat all_issues.json
+
+      - name: Calculate Metrics
+        id: metrics
+        run: |
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          
+          # Define branches and their labels
+          declare -A BRANCH_ENV
+          BRANCH_ENV["test"]="production"
+          BRANCH_ENV["master"]="qa"
+          
+          # Initialize output variables
+          COMMITS_TEST=0 COMMITS_MASTER=0 COMMITS_OTHER=0
+          MERGED_COMMITS_TEST=0 MERGED_COMMITS_MASTER=0 MERGED_COMMITS_OTHER=0
+          PR_MERGE_TIME_TEST=0 PR_MERGE_TIME_MASTER=0 PR_MERGE_TIME_OTHER=0
+          DEPLOYMENTS_TEST=0 DEPLOYMENTS_MASTER=0 DEPLOYMENTS_OTHER=0
+          DAILY_FREQ_TEST=0 DAILY_FREQ_MASTER=0 DAILY_FREQ_OTHER=0
+          LEAD_TIME_TEST=0 LEAD_TIME_MASTER=0 LEAD_TIME_OTHER=0
+          WORKFLOW_SUCCESS_RATE_TEST=0 WORKFLOW_SUCCESS_RATE_MASTER=0 WORKFLOW_SUCCESS_RATE_OTHER=0
+          WORKFLOW_RUN_TIME_TEST=0 WORKFLOW_RUN_TIME_MASTER=0 WORKFLOW_RUN_TIME_OTHER=0
+          PR_REVIEW_TIME_TEST=0 PR_REVIEW_TIME_MASTER=0 PR_REVIEW_TIME_OTHER=0
+          
+          # Number of Commits
+          for BRANCH in test master; do
+            COMMITS=$(git log --since="30 days ago" --oneline origin/$BRANCH | wc -l || echo "0")
+            eval "COMMITS_${BRANCH^^}=$COMMITS"
+            echo "Commits ($BRANCH): $COMMITS"
+          done
+          COMMITS_OTHER=$(git log --since="30 days ago" --oneline --branches='*' --not origin/test origin/master | wc -l || echo "0")
+          echo "Commits (other branches): $COMMITS_OTHER"
+          
+          # Merged Commits and PR Merge Time
+          for BRANCH in test master; do
+            PR_DATA=$(gh pr list \
+              --state merged \
+              --base $BRANCH \
+              --limit 10 \
+              --json number,createdAt,mergedAt,commits \
+              --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\")] | {count: length, commits: map(.commits[].sha) | length, merge_times: map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)}")
+            MERGED_COMMITS=$(echo "$PR_DATA" | jq '.commits // 0')
+            PR_MERGE_TIME=$(echo "$PR_DATA" | jq '.merge_times | add / length // 0')
+            eval "MERGED_COMMITS_${BRANCH^^}=$MERGED_COMMITS"
+            eval "PR_MERGE_TIME_${BRANCH^^}=$PR_MERGE_TIME"
+            echo "Merged commits ($BRANCH): $MERGED_COMMITS"
+            echo "Average PR merge time ($BRANCH, hours): $PR_MERGE_TIME"
+          done
+          PR_DATA_OTHER=$(gh pr list \
+            --state merged \
+            --limit 10 \
+            --json number,createdAt,mergedAt,baseRefName,commits \
+            --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\" and .baseRefName != \"test\" and .baseRefName != \"master\")] | {count: length, commits: map(.commits[].sha) | length, merge_times: map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)}")
+          MERGED_COMMITS_OTHER=$(echo "$PR_DATA_OTHER" | jq '.commits // 0')
+          PR_MERGE_TIME_OTHER=$(echo "$PR_DATA_OTHER" | jq '.merge_times | add / length // 0')
+          echo "Merged commits (other branches): $MERGED_COMMITS_OTHER"
+          echo "Average PR merge time (other branches, hours): $PR_MERGE_TIME_OTHER"
+          
+          # Deployment Frequency (successful workflow runs)
+          for BRANCH in test master; do
+            DEPLOYMENTS=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }}/actions/runs \
+              --paginate \
+              --jq "[.workflow_runs[] | select(.head_branch == \"$BRANCH\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"success\")] | length" || echo "0")
+            if [ "$DEPLOYMENTS" -gt 0 ]; then
+              DAILY_FREQ=$(echo "scale=2; $DEPLOYMENTS / 30" | bc)
+            else
+              DAILY_FREQ=0
+            fi
+            eval "DEPLOYMENTS_${BRANCH^^}=$DEPLOYMENTS"
+            eval "DAILY_FREQ_${BRANCH^^}=$DAILY_FREQ"
+            echo "Deployments ($BRANCH): $DEPLOYMENTS"
+            echo "Daily frequency ($BRANCH): $DAILY_FREQ"
+          done
+          DEPLOYMENTS_OTHER=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/runs \
+            --paginate \
+            --jq "[.workflow_runs[] | select(.head_branch != \"test\" and .head_branch != \"master\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"success\")] | length" || echo "0")
+          if [ "$DEPLOYMENTS_OTHER" -gt 0 ]; then
+            DAILY_FREQ_OTHER=$(echo "scale=2; $DEPLOYMENTS_OTHER / 30" | bc)
+          else
+            DAILY_FREQ_OTHER=0
+          fi
+          echo "Deployments (other branches): $DEPLOYMENTS_OTHER"
+          echo "Daily frequency (other branches): $DAILY_FREQ_OTHER"
+          
+          # Lead Time for Changes
+          for BRANCH in test master; do
+            LEAD_TIMES=$(gh pr list \
+              --state merged \
+              --base $BRANCH \
+              --limit 10 \
+              --json number,createdAt,mergedAt \
+              --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\")] | map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
+            if [ -z "$LEAD_TIMES" ] || [ "$LEAD_TIMES" = "null" ]; then
+              LEAD_TIME=0
+            else
+              LEAD_TIME=$LEAD_TIMES
+            fi
+            eval "LEAD_TIME_${BRANCH^^}=$LEAD_TIME"
+            echo "Average lead time ($BRANCH, hours): $LEAD_TIME"
+          done
+          LEAD_TIMES_OTHER=$(gh pr list \
+            --state merged \
+            --limit 10 \
+            --json number,createdAt,mergedAt,baseRefName \
+            --jq "[.[] | select(.mergedAt > \"$THIRTY_DAYS_AGO\" and .baseRefName != \"test\" and .baseRefName != \"master\")] | map(((.mergedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
+          if [ -z "$LEAD_TIMES_OTHER" ] || [ "$LEAD_TIMES_OTHER" = "null" ]; then
+            LEAD_TIME_OTHER=0
+          else
+            LEAD_TIME_OTHER=$LEAD_TIMES_OTHER
+          fi
+          echo "Average lead time (other branches, hours): $LEAD_TIME_OTHER"
+          
+          # Workflow Success Rate
+          for BRANCH in test master; do
+            TOTAL_RUNS=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }}/actions/runs \
+              --paginate \
+              --jq "[.workflow_runs[] | select(.head_branch == \"$BRANCH\" and .created_at > \"$THIRTY_DAYS_AGO\")] | length" || echo "0")
+            SUCCESS_RUNS=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }}/actions/runs \
+              --paginate \
+              --jq "[.workflow_runs[] | select(.head_branch == \"$BRANCH\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"success\")] | length" || echo "0")
+            if [ "$TOTAL_RUNS" -gt 0 ]; then
+              SUCCESS_RATE=$(echo "scale=2; ($SUCCESS_RUNS / $TOTAL_RUNS) * 100" | bc)
+            else
+              SUCCESS_RATE=0
+            fi
+            eval "WORKFLOW_SUCCESS_RATE_${BRANCH^^}=$SUCCESS_RATE"
+            echo "Workflow success rate ($BRANCH, %): $SUCCESS_RATE"
+          done
+          TOTAL_RUNS_OTHER=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/runs \
+            --paginate \
+            --jq "[.workflow_runs[] | select(.head_branch != \"test\" and .head_branch != \"master\" and .created_at > \"$THIRTY_DAYS_AGO\")] | length" || echo "0")
+          SUCCESS_RUNS_OTHER=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/runs \
+            --paginate \
+            --jq "[.workflow_runs[] | select(.head_branch != \"test\" and .head_branch != \"master\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"success\")] | length" || echo "0")
+          if [ "$TOTAL_RUNS_OTHER" -gt 0 ]; then
+            WORKFLOW_SUCCESS_RATE_OTHER=$(echo "scale=2; ($SUCCESS_RUNS_OTHER / $TOTAL_RUNS_OTHER) * 100" | bc)
+          else
+            WORKFLOW_SUCCESS_RATE_OTHER=0
+          fi
+          echo "Workflow success rate (other branches, %): $WORKFLOW_SUCCESS_RATE_OTHER"
+          
+          # Average Workflow Run Time
+          for BRANCH in test master; do
+            RUN_TIMES=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }}/actions/runs \
+              --paginate \
+              --jq "[.workflow_runs[] | select(.head_branch == \"$BRANCH\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"success\")] | map(((.updated_at | fromdateiso8601) - (.created_at | fromdateiso8601))) | add / length" || echo "0")
+            if [ -z "$RUN_TIMES" ] || [ "$RUN_TIMES" = "null" ]; then
+              RUN_TIME=0
+            else
+              RUN_TIME=$RUN_TIMES
+            fi
+            eval "WORKFLOW_RUN_TIME_${BRANCH^^}=$RUN_TIME"
+            echo "Average workflow run time ($BRANCH, seconds): $RUN_TIME"
+          done
+          RUN_TIMES_OTHER=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/runs \
+            --paginate \
+            --jq "[.workflow_runs[] | select(.head_branch != \"test\" and .head_branch != \"master\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"success\")] | map(((.updated_at | fromdateiso8601) - (.created_at | fromdateiso8601))) | add / length" || echo "0")
+          if [ -z "$RUN_TIMES_OTHER" ] || [ "$RUN_TIMES_OTHER" = "null" ]; then
+            RUN_TIME_OTHER=0
+          else
+            RUN_TIME_OTHER=$RUN_TIMES_OTHER
+          fi
+          echo "Average workflow run time (other branches, seconds): $RUN_TIME_OTHER"
+          
+          # PR Review Time
+          for BRANCH in test master; do
+            REVIEW_TIMES=$(gh pr list \
+              --state merged \
+              --base $BRANCH \
+              --limit 10 \
+              --json number,createdAt,reviews \
+              --jq "[.[] | select(.reviews != null and .reviews != [] and (.mergedAt > \"$THIRTY_DAYS_AGO\"))] | map(((.reviews[0].submittedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
+            if [ -z "$REVIEW_TIMES" ] || [ "$REVIEW_TIMES" = "null" ]; then
+              REVIEW_TIME=0
+            else
+              REVIEW_TIME=$REVIEW_TIMES
+            fi
+            eval "PR_REVIEW_TIME_${BRANCH^^}=$REVIEW_TIME"
+            echo "Average PR review time ($BRANCH, hours): $REVIEW_TIME"
+          done
+          REVIEW_TIMES_OTHER=$(gh pr list \
+            --state merged \
+            --limit 10 \
+            --json number,createdAt,reviews,baseRefName \
+            --jq "[.[] | select(.baseRefName != \"test\" and .baseRefName != \"master\" and .reviews != null and .reviews != [] and (.mergedAt > \"$THIRTY_DAYS_AGO\"))] | map(((.reviews[0].submittedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600) | add / length" || echo "0")
+          if [ -z "$REVIEW_TIMES_OTHER" ] || [ "$REVIEW_TIMES_OTHER" = "null" ]; then
+            PR_REVIEW_TIME_OTHER=0
+          else
+            PR_REVIEW_TIME_OTHER=$REVIEW_TIMES_OTHER
+          fi
+          echo "Average PR review time (other branches, hours): $PR_REVIEW_TIME_OTHER"
+          
+          # Mean Time to Recovery (MTTR)
+          MTTR_DATA=$(gh issue list \
+            --state closed \
+            --label incident \
+            --limit 10 \
+            --json number,createdAt,closedAt \
+            --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")] | map(((.closedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)" || echo "[]")
+          BUG_DATA=$(gh issue list \
+            --state closed \
+            --label bug \
+            --limit 10 \
+            --json number,createdAt,closedAt \
+            --jq "[.[] | select(.closedAt > \"$THIRTY_DAYS_AGO\")] | map(((.closedAt | fromdateiso8601) - (.createdAt | fromdateiso8601)) / 3600)" || echo "[]")
+          if [ "$MTTR_DATA" != "[]" ] && [ -n "$MTTR_DATA" ]; then
+            AVG_MTTR=$(echo "$MTTR_DATA" | jq 'add / length // 0')
+            INCIDENT_COUNT=$(echo "$MTTR_DATA" | jq 'length')
+          else
+            AVG_MTTR=0
+            INCIDENT_COUNT=0
+          fi
+          echo "Average MTTR (hours): $AVG_MTTR"
+          echo "Incident count: $INCIDENT_COUNT"
+          
+          # Change Failure Rate
+          for BRANCH in test master; do
+            TOTAL_DEPLOYMENTS=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }}/actions/runs \
+              --paginate \
+              --jq "[.workflow_runs[] | select(.head_branch == \"$BRANCH\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"success\")] | length" || echo "0")
+            FAILED_DEPLOYMENTS=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }}/actions/runs \
+              --paginate \
+              --jq "[.workflow_runs[] | select(.head_branch == \"$BRANCH\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"failure\")] | length" || echo "0")
+            if [ "$TOTAL_DEPLOYMENTS" -gt 0 ]; then
+              CFR=$(echo "scale=4; $FAILED_DEPLOYMENTS / $TOTAL_DEPLOYMENTS * 100" | bc)
+            else
+              CFR=0
+            fi
+            eval "CFR_${BRANCH^^}=$CFR"
+            eval "TOTAL_DEPLOYMENTS_${BRANCH^^}=$TOTAL_DEPLOYMENTS"
+            eval "FAILED_DEPLOYMENTS_${BRANCH^^}=$FAILED_DEPLOYMENTS"
+            echo "Change failure rate ($BRANCH, %): $CFR"
+            echo "Total deployments ($BRANCH): $TOTAL_DEPLOYMENTS"
+            echo "Failed deployments ($BRANCH): $FAILED_DEPLOYMENTS"
+          done
+          TOTAL_DEPLOYMENTS_OTHER=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/runs \
+            --paginate \
+            --jq "[.workflow_runs[] | select(.head_branch != \"test\" and .head_branch != \"master\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"success\")] | length" || echo "0")
+          FAILED_DEPLOYMENTS_OTHER=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/runs \
+            --paginate \
+            --jq "[.workflow_runs[] | select(.head_branch != \"test\" and .head_branch != \"master\" and .created_at > \"$THIRTY_DAYS_AGO\" and .conclusion == \"failure\")] | length" || echo "0")
+          if [ "$TOTAL_DEPLOYMENTS_OTHER" -gt 0 ]; then
+            CFR_OTHER=$(echo "scale=4; $FAILED_DEPLOYMENTS_OTHER / $TOTAL_DEPLOYMENTS_OTHER * 100" | bc)
+          else
+            CFR_OTHER=0
+          fi
+          echo "Change failure rate (other branches, %): $CFR_OTHER"
+          echo "Total deployments (other branches): $TOTAL_DEPLOYMENTS_OTHER"
+          echo "Failed deployments (other branches): $FAILED_DEPLOYMENTS_OTHER"
+          
+          # Output variables for test branch (production)
+          echo "commits_test=$COMMITS_TEST" >> $GITHUB_OUTPUT
+          echo "merged_commits_test=$MERGED_COMMITS_TEST" >> $GITHUB_OUTPUT
+          echo "pr_merge_time_test=$PR_MERGE_TIME_TEST" >> $GITHUB_OUTPUT
+          echo "deployments_test=$DEPLOYMENTS_TEST" >> $GITHUB_OUTPUT
+          echo "daily_frequency_test=$DAILY_FREQ_TEST" >> $GITHUB_OUTPUT
+          echo "lead_time_test=$LEAD_TIME_TEST" >> $GITHUB_OUTPUT
+          echo "workflow_success_rate_test=$WORKFLOW_SUCCESS_RATE_TEST" >> $GITHUB_OUTPUT
+          echo "workflow_run_time_test=$WORKFLOW_RUN_TIME_TEST" >> $GITHUB_OUTPUT
+          echo "pr_review_time_test=$PR_REVIEW_TIME_TEST" >> $GITHUB_OUTPUT
+          echo "average_mttr_hours=$AVG_MTTR" >> $GITHUB_OUTPUT
+          echo "incident_count=$INCIDENT_COUNT" >> $GITHUB_OUTPUT
+          echo "change_failure_rate_test=$CFR_TEST" >> $GITHUB_OUTPUT
+          echo "total_deployments_test=$TOTAL_DEPLOYMENTS_TEST" >> $GITHUB_OUTPUT
+          echo "failed_deployments_test=$FAILED_DEPLOYMENTS_TEST" >> $GITHUB_OUTPUT
+
+      - name: Push Metrics to Prometheus
+        run: |
+          cat <<EOF | curl --data-binary @- ${PROMETHEUS_PUSHGATEWAY_URL}/metrics/job/dora_metrics/instance/metrics
+          # TYPE commit_count_30d counter
+          # HELP commit_count_30d Number of commits in last 30 days
+          commit_count_30d{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.commits_test }}
+          # TYPE merged_commit_count_30d counter
+          # HELP merged_commit_count_30d Number of commits from merged PRs in last 30 days
+          merged_commit_count_30d{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.merged_commits_test }}
+          # TYPE pr_merge_time_hours gauge
+          # HELP pr_merge_time_hours Average time to merge PRs in hours
+          pr_merge_time_hours{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.pr_merge_time_test }}
+          # TYPE deployment_frequency gauge
+          # HELP deployment_frequency Number of deployments per day
+          deployment_frequency{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.daily_frequency_test }}
+          # TYPE deployment_count_30d counter
+          # HELP deployment_count_30d Total deployments in last 30 days
+          deployment_count_30d{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.deployments_test }}
+          # TYPE lead_time_for_changes_hours gauge
+          # HELP lead_time_for_changes_hours Average lead time from PR creation to merge in hours
+          lead_time_for_changes_hours{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.lead_time_test }}
+          # TYPE workflow_success_rate gauge
+          # HELP workflow_success_rate Percentage of successful workflow runs
+          workflow_success_rate{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.workflow_success_rate_test }}
+          # TYPE workflow_run_time_seconds gauge
+          # HELP workflow_run_time_seconds Average workflow run time in seconds
+          workflow_run_time_seconds{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.workflow_run_time_test }}
+          # TYPE pr_review_time_hours gauge
+          # HELP pr_review_time_hours Average time to first PR review in hours
+          pr_review_time_hours{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.pr_review_time_test }}
+          # TYPE mean_time_to_recovery_hours gauge
+          # HELP mean_time_to_recovery_hours Average time to recover from incidents in hours
+          mean_time_to_recovery_hours{repository="${{ github.repository }}"} ${{ steps.metrics.outputs.average_mttr_hours }}
+          # TYPE incident_count_30d counter
+          # HELP incident_count_30d Number of incidents in last 30 days
+          incident_count_30d{repository="${{ github.repository }}"} ${{ steps.metrics.outputs.incident_count }}
+          # TYPE change_failure_rate gauge
+          # HELP change_failure_rate Percentage of deployments causing failure
+          change_failure_rate{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.change_failure_rate_test }}
+          # TYPE total_deployments_30d counter
+          # HELP total_deployments_30d Total deployments in last 30 days
+          total_deployments_30d{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.total_deployments_test }}
+          # TYPE failed_deployments_30d counter
+          # HELP failed_deployments_30d Failed deployments in last 30 days
+          failed_deployments_30d{repository="${{ github.repository }}",environment="production"} ${{ steps.metrics.outputs.failed_deployments_test }}
+          EOF
+
+      - name: Push Collection Timestamp
+        run: |
+          TIMESTAMP=$(date +%s)
+          echo "Collection timestamp: $TIMESTAMP"
+          cat <<EOF | curl --data-binary @- ${PROMETHEUS_PUSHGATEWAY_URL}/metrics/job/dora_metrics/instance/metadata
+          # TYPE dora_metrics_last_collection_timestamp gauge
+          # HELP dora_metrics_last_collection_timestamp Timestamp of last DORA metrics collection
+          dora_metrics_last_collection_timestamp{repository="${{ github.repository }}"} ${TIMESTAMP}
+          # TYPE dora_metrics_collection_success gauge
+          # HELP dora_metrics_collection_success Whether the last collection was successful (1) or not (0)
+          dora_metrics_collection_success{repository="${{ github.repository }}"} 1
+          EOF
